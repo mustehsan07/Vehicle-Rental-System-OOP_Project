@@ -7,7 +7,7 @@ public class ProVehicleRegister extends JFrame {
     public ProVehicleRegister() {
         
         setTitle("Elite Vehicle Rentals - Registration");
-        setSize(900, 650); // Thora sa height barhaya gaya hai fields ke liye
+        setSize(900, 650); 
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setUndecorated(true); 
