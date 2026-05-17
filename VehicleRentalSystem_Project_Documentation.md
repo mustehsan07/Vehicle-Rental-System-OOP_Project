@@ -131,6 +131,19 @@ calculateRent() overridden in child classes.
 8. Rent Vehicle Screen
 9. Return Vehicle Screen
 10. Rental History Screen
+
+## Running The Admin Module
+
+Because the admin classes use `package admin;`, the launcher must be started with the fully qualified class name.
+
+From `src/admin`, compile and run with:
+
+```powershell
+javac -d ..\..\out\admin *.java
+java -cp ..\..\out\admin admin.Test
+```
+
+If you run `java Test`, Java will look for a default-package class named `Test` and the admin panel will not start.
 ## UI Style Guide
 
 This section defines visual tokens and basic component styling to keep the application's UI consistent and professional.
