@@ -131,8 +131,93 @@ calculateRent() overridden in child classes.
 8. Rent Vehicle Screen
 9. Return Vehicle Screen
 10. Rental History Screen
+## UI Style Guide
 
----
+This section defines visual tokens and basic component styling to keep the application's UI consistent and professional.
+
+- **Purpose:** Provide a single source of truth for colors, typography, spacing, and component tokens so developers and designers can build consistent screens.
+
+
+### Color Palette
+
+- **Accent:** #7C4DFF — custom violet-indigo hue (primary action and highlights)
+- **Accent (Hover/Active):** #5E2BFF — darker shade used for hover/focus states
+- **Background (page):** #F5F7FA — app background
+- **Card / Surface:** #FFFFFF — panels and cards
+- **Text Primary:** #0F1724
+- **Text Secondary:** #6B7280
+
+Notes: use these tokens (`accent`, `accentHover`, `background`, `surface`, `textPrimary`, `textSecondary`) across the codebase instead of additional color variables.
+
+### Typography
+
+- **Primary font:** Inter, fallback `Segoe UI`, `Helvetica`, sans-serif
+- **Font weights:** Regular 400, Medium 500, SemiBold 600, Bold 700
+- **Scale (desktop):**
+	- Display / H1: 32px
+	- H2: 24px
+	- H3: 20px
+	- Body Large: 16px
+	- Body Regular: 14px
+	- Small / Caption: 12px
+
+Use consistent line-height (1.4–1.6) and limit display font sizes on small screens.
+
+### Spacing & Layout
+
+- **Base grid:** 8px
+- **Spacing scale:** 4px, 8px, 16px, 24px, 32px, 48px
+- **Border radius:** 8px (pill buttons can be 999px)
+- **Container widths:** center main content with max-width 1200px
+
+### Elevation & Shadows
+
+- **Shadow Small:** subtle card lift
+- **Shadow Medium:** used for dialogs and popovers
+- **Shadow Large:** used sparingly for prominent overlays
+
+
+### Component Tokens (examples)
+
+- **Button (Primary):** background `accent`, hover `accentHover`, text `#FFFFFF`, radius 8px, padding 10px 16px
+- **Button (Secondary):** background `surface`, border `#E6E9EE`, text `textPrimary`
+- **Input:** background `surface`, border `#E6E9EE`, focus outline `accent` 2px, radius 6px
+- **Table rows:** subtle alternating backgrounds using `surface` and a slightly-tinted variant, with 12px cell padding
+
+
+### Accessibility
+
+- Aim for contrast ratio >= 4.5:1 for body text and >= 3:1 for large text.
+- Always provide visible focus outlines for keyboard navigation (use `accent` with 2px thickness).
+- Use semantic components where possible (buttons, labels, form fields) and include ARIA attributes for dynamic regions.
+
+
+### Theme Example (Java)
+
+Below is a small `Theme` helper you can adapt into the `utils` package to centralize the simplified color tokens for Swing/JavaFX.
+
+```java
+package utils;
+
+import java.awt.Color;
+
+public final class Theme {
+	// Custom accent chosen from the color wheel (violet-indigo)
+	public static final Color ACCENT = Color.decode("#7C4DFF");
+	public static final Color ACCENT_HOVER = Color.decode("#5E2BFF");
+	public static final Color BACKGROUND = Color.decode("#F5F7FA");
+	public static final Color SURFACE = Color.decode("#FFFFFF");
+	public static final Color TEXT_PRIMARY = Color.decode("#0F1724");
+	public static final Color TEXT_SECONDARY = Color.decode("#6B7280");
+
+	private Theme() {}
+}
+```
+
+### Implementation notes
+
+- Add the `Theme` class to `src/utils` and import tokens into GUI builders and components.
+- Create a short `UI_GUIDELINES.md` or a `design/` folder if the team needs expanded assets (icons, sample screens, Figma links).
 
 ## Runtime Data Storage
 
@@ -153,10 +238,3 @@ Main.java
 → Perform Operations
 
 ---
-
-## Future Improvements
-
-- Add database integration
-- Add payment gateway
-- Add online booking
-- Generate invoices
