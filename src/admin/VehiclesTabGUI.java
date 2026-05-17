@@ -2,6 +2,8 @@ import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -17,6 +19,7 @@ import javax.swing.table.TableCellRenderer;
 public class VehiclesTabGUI extends RoundedPanel {
     private final VehicleManagementService service;
     private final DefaultTableModel tableModel;
+    private JTable table;
 
     private final JTextField idField = new RoundedTextField(AdminTheme.RADIUS_SMALL);
     private final JTextField typeField = new RoundedTextField(AdminTheme.RADIUS_SMALL);
@@ -52,7 +55,7 @@ public class VehiclesTabGUI extends RoundedPanel {
         heading.setForeground(AdminTheme.TEXT_PRIMARY);
         card.add(heading, BorderLayout.NORTH);
 
-        JTable table = new JTable(tableModel) {
+        table = new JTable(tableModel) {
             @Override
             public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
                 Component component = super.prepareRenderer(renderer, row, column);
@@ -74,6 +77,14 @@ public class VehiclesTabGUI extends RoundedPanel {
         table.getTableHeader().setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, AdminTheme.BORDER));
         table.setSelectionBackground(AdminTheme.ACCENT);
         table.setSelectionForeground(java.awt.Color.WHITE);
+        table.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2) {
+                    populateFormFromSelectedRow();
+                }
+            }
+        });
 
         JScrollPane scrollPane = new JScrollPane(table);
         scrollPane.setBorder(BorderFactory.createEmptyBorder());
@@ -226,5 +237,18 @@ public class VehiclesTabGUI extends RoundedPanel {
         modelField.setText("");
         rateField.setText("");
         statusBox.setSelectedIndex(0);
+    }
+
+    private void populateFormFromSelectedRow() {
+        int viewRow = table.getSelectedRow();
+        if (viewRow < 0) {
+            return;
+        }
+        int modelRow = table.convertRowIndexToModel(viewRow);
+        idField.setText(String.valueOf(tableModel.getValueAt(modelRow, 0)));
+        typeField.setText(String.valueOf(tableModel.getValueAt(modelRow, 1)));
+        modelField.setText(String.valueOf(tableModel.getValueAt(modelRow, 2)));
+        statusBox.setSelectedItem(String.valueOf(tableModel.getValueAt(modelRow, 3)));
+        rateField.setText(String.valueOf(tableModel.getValueAt(modelRow, 4)));
     }
 }
