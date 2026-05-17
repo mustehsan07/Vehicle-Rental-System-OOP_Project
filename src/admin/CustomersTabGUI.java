@@ -1,3 +1,5 @@
+package admin;
+
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.FlowLayout;
@@ -21,9 +23,9 @@ public class CustomersTabGUI extends RoundedPanel {
     private final DefaultTableModel tableModel;
     private JTable table;
 
-    private final JTextField idField = new RoundedTextField(AdminTheme.RADIUS_SMALL);
-    private final JTextField nameField = new RoundedTextField(AdminTheme.RADIUS_SMALL);
-    private final JTextField emailField = new RoundedTextField(AdminTheme.RADIUS_SMALL);
+    private final JTextField idField = createField();
+    private final JTextField nameField = createField();
+    private final JTextField emailField = createField();
     private final JComboBox<String> statusBox = new RoundedComboBox<>(new String[]{"Active", "Blocked"}, AdminTheme.RADIUS_SMALL);
 
     public CustomersTabGUI(CustomerManagementService service) {
@@ -223,6 +225,20 @@ public class CustomersTabGUI extends RoundedPanel {
         nameField.setText("");
         emailField.setText("");
         statusBox.setSelectedIndex(0);
+    }
+
+    private JTextField createField() {
+        JTextField field = new JTextField();
+        field.setBackground(AdminTheme.BACKGROUND);
+        field.setForeground(AdminTheme.TEXT_PRIMARY);
+        field.setCaretColor(AdminTheme.ACCENT);
+        field.setFont(AdminTheme.BODY_FONT.deriveFont(java.awt.Font.PLAIN, 13f));
+        field.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createMatteBorder(0, 0, 2, 0, AdminTheme.ACCENT),
+                BorderFactory.createEmptyBorder(8, 10, 8, 10)
+        ));
+        field.setPreferredSize(new java.awt.Dimension(0, 38));
+        return field;
     }
 
     private void populateFormFromSelectedRow() {

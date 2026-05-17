@@ -1,3 +1,5 @@
+package admin;
+
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
@@ -10,7 +12,7 @@ public class Test {
 		}
 
 		SwingUtilities.invokeLater(() -> {
-			JFrame frame = new JFrame("Admin Panel Test");
+			JFrame frame = new JFrame("Owner Panel Test");
 			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 			frame.setSize(1200, 760);
 			frame.setLocationRelativeTo(null);
