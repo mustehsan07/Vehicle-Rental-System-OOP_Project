@@ -57,35 +57,30 @@ public class ProVehicleRegister extends JFrame {
             }
         };
 
-        JButton exitBtn = createIconButton("X");
-        exitBtn.setBounds(852, 10, 32, 32);
-        exitBtn.addActionListener(e -> System.exit(0));
-        mainPanel.add(exitBtn);
-
         JPanel heroPanel = new JPanel(null);
         heroPanel.setOpaque(false);
-        heroPanel.setBounds(44, 150, 360, 230);
+        heroPanel.setBounds(150, 220, 880, 320);
 
-        JLabel headline = new JLabel("Join the Ride");
-        headline.setFont(new Font("Segoe UI", Font.BOLD, 46));
+        JLabel headline = new JLabel("<html><div style='width:100%; line-height:0.5;'>Create Customer Account</div></html>");
+        headline.setFont(new Font("Segoe UI", Font.BOLD, 54));
         headline.setForeground(Color.WHITE);
-        headline.setBounds(0, 0, 360, 60);
+        headline.setBounds(0, 0, 720, 150);
         heroPanel.add(headline);
 
-        JLabel subtitle = new JLabel("Create a customer account in seconds");
-        subtitle.setFont(new Font("Segoe UI", Font.PLAIN, 15));
+        JLabel subtitle = new JLabel("Customer account creation in one clean portal");
+        subtitle.setFont(new Font("Segoe UI", Font.PLAIN, 18));
         subtitle.setForeground(new Color(230, 235, 241));
-        subtitle.setBounds(2, 58, 340, 24);
+        subtitle.setBounds(2, 150, 480, 28);
         heroPanel.add(subtitle);
 
-        JLabel story = new JLabel("<html><div style='width:320px;'>Register once and keep your bookings, rentals, and history in one secure profile.</div></html>");
+        JLabel story = new JLabel("<html><div style='width:360px;'>Register once and keep your bookings, rentals, and history in one secure profile.</div></html>");
         story.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         story.setForeground(new Color(235, 240, 244));
-        story.setBounds(2, 98, 330, 70);
+        story.setBounds(2, 180, 480, 76);
         heroPanel.add(story);
         mainPanel.add(heroPanel);
 
-        JPanel regCard = createCard(500, 50, 340, 530);
+        JPanel regCard = createCard(900, 150, 380, 530);
         regCard.setLayout(null);
 
         JLabel title = new JLabel("Create Account");
@@ -104,41 +99,38 @@ public class ProVehicleRegister extends JFrame {
         nameLabel.setBounds(34, 104, 100, 16);
         regCard.add(nameLabel);
         JTextField nameField = createField();
-        nameField.setBounds(34, 122, 272, 34);
+        nameField.setBounds(34, 122, 312, 36);
         regCard.add(nameField);
 
         JLabel emailLabel = createLabel("EMAIL");
-        emailLabel.setBounds(34, 178, 100, 16);
+        emailLabel.setBounds(34, 188, 100, 16);
         regCard.add(emailLabel);
         JTextField emailField = createField();
-        emailField.setBounds(34, 196, 272, 34);
+        emailField.setBounds(34, 206, 312, 36);
         regCard.add(emailField);
 
         JLabel passLabel = createLabel("PASSWORD");
-        passLabel.setBounds(34, 252, 100, 16);
+        passLabel.setBounds(34, 272, 100, 16);
         regCard.add(passLabel);
         JPasswordField passField = createPasswordField();
-        passField.setBounds(34, 270, 272, 34);
+        passField.setBounds(34, 290, 312, 36);
         regCard.add(passField);
 
-        JButton registerBtn = createAccentButton("CREATE ACCOUNT");
-        registerBtn.setBounds(34, 336, 272, 46);
+        JButton registerBtn = createRoundedAccentButton("CREATE ACCOUNT");
+        registerBtn.setBounds(34, 370, 312, 48);
         registerBtn.addActionListener(e -> handleRegistration(nameField, emailField, passField));
         regCard.add(registerBtn);
 
         JLabel instructions = new JLabel("<html><b>Instructions:</b><br>All fields are required.<br>Use a valid email address.</html>");
         instructions.setFont(new Font("Segoe UI", Font.PLAIN, 11));
         instructions.setForeground(TEXT_MUTED);
-        instructions.setBounds(34, 396, 280, 54);
+        instructions.setBounds(34, 434, 312, 54);
         regCard.add(instructions);
 
-        JButton backBtn = new JButton("← Back to Login");
-        backBtn.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        backBtn.setForeground(ACCENT);
+        JButton backBtn = createRoundedLinkButton("Back to Login");
+        backBtn.setBounds(115, 490, 146, 24);
         backBtn.setContentAreaFilled(false);
         backBtn.setBorderPainted(false);
-        backBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        backBtn.setBounds(184, 466, 122, 22);
         backBtn.addActionListener(e -> {
             new ProVehicleLogin().setVisible(true);
             dispose();
@@ -214,22 +206,46 @@ public class ProVehicleRegister extends JFrame {
         return field;
     }
 
-    private JButton createAccentButton(String text) {
-        JButton button = new JButton(text);
-        button.setBackground(ACCENT);
+    private JButton createRoundedAccentButton(String text) {
+        JButton button = new JButton(text) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(ACCENT);
+                g2.fillRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 14, 14);
+                g2.dispose();
+                super.paintComponent(g);
+            }
+
+            @Override
+            protected void paintBorder(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(new Color(15, 118, 110));
+                g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 14, 14);
+                g2.dispose();
+            }
+        };
         button.setForeground(Color.WHITE);
-        button.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        button.setFont(new Font("Segoe UI", Font.BOLD, 13));
         button.setFocusPainted(false);
+        button.setContentAreaFilled(false);
         button.setBorderPainted(false);
+        button.setOpaque(false);
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
         return button;
     }
 
-    private JButton createIconButton(String text) {
+    private JButton createRoundedLinkButton(String text) {
         JButton button = new JButton(text);
-        button.setForeground(Color.WHITE);
+        button.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        button.setForeground(ACCENT);
         button.setContentAreaFilled(false);
-        button.setBorder(BorderFactory.createEmptyBorder());
+        button.setBorderPainted(false);
+        button.setFocusPainted(false);
+        button.setOpaque(false);
+        button.setMargin(new java.awt.Insets(0, 0, 0, 0));
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
         return button;
     }

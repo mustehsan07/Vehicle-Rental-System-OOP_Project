@@ -131,7 +131,7 @@ public class ProVehicleLogin extends JFrame {
         loginCard.add(instructions);
 
         JButton nextBtn = createRoundedLinkButton("Create Account");
-        nextBtn.setBounds(100, 400, 146, 24);
+        nextBtn.setBounds(110, 400, 146, 24);
         nextBtn.addActionListener(e -> {
             new ProVehicleRegister().setVisible(true);
             dispose();
