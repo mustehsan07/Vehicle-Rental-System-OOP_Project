@@ -1,9 +1,11 @@
 package app;
 
-import admin.Test;
+import auth.ProVehicleLogin;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
 
 public class MainClass {
 
@@ -17,7 +19,12 @@ public class MainClass {
     }
 
     public static void main(String[] args) {
-        Test.main(args);
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | javax.swing.UnsupportedLookAndFeelException ignored) {
+        }
+
+        SwingUtilities.invokeLater(() -> new ProVehicleLogin().setVisible(true));
     }
 
     public static void addUser(UserRow user) {
