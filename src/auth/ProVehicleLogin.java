@@ -1,5 +1,7 @@
 package auth;
 
+import customer.CustomerDashboard;
+import data.CustomerData;
 import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Cursor;
@@ -19,6 +21,8 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
+import javax.swing.JToggleButton;
+import model.Customer;
 
 public class ProVehicleLogin extends JFrame {
     private static final Color ACCENT = Color.decode("#0F766E");
@@ -116,6 +120,9 @@ public class ProVehicleLogin extends JFrame {
         loginCard.add(passLabel);
 
         JPasswordField passField = createPasswordField();
+        JToggleButton passwordToggle = createPasswordToggleButton(passField);
+        passwordToggle.setBounds(246, 176, 100, 22);
+        loginCard.add(passwordToggle);
         passField.setBounds(34, 200, 312, 36);
         loginCard.add(passField);
 
@@ -155,7 +162,7 @@ public class ProVehicleLogin extends JFrame {
         if ("admin".equalsIgnoreCase(user.role)) {
             launchAdminPanel();
         } else {
-            JOptionPane.showMessageDialog(null, "Welcome, " + user.fullName + ".", "Login Successful", JOptionPane.INFORMATION_MESSAGE);
+            launchCustomerPanel(user);
         }
     }
 
@@ -166,6 +173,16 @@ public class ProVehicleLogin extends JFrame {
         } catch (ReflectiveOperationException ex) {
             JOptionPane.showMessageDialog(this, "Admin panel could not be opened.", "Launch Error", JOptionPane.ERROR_MESSAGE);
         }
+    }
+
+    private void launchCustomerPanel(AuthController.AuthRecord user) {
+        Customer customer = CustomerData.findByEmail(user.email);
+        if (customer == null) {
+            JOptionPane.showMessageDialog(this, "Customer panel could not be opened.", "Launch Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        new CustomerDashboard(customer).setVisible(true);
     }
 
     private JPanel createCard(int x, int y, int width, int height) {
@@ -214,7 +231,31 @@ public class ProVehicleLogin extends JFrame {
                 BorderFactory.createMatteBorder(0, 0, 2, 0, ACCENT),
                 BorderFactory.createEmptyBorder(0, 10, 0, 10)
         ));
+        field.setEchoChar('\u2022');
         return field;
+    }
+
+    private JToggleButton createPasswordToggleButton(JPasswordField passwordField) {
+        JToggleButton toggleButton = new JToggleButton();
+        toggleButton.setText("Show");
+        toggleButton.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        toggleButton.setForeground(ACCENT);
+        toggleButton.setBackground(Color.WHITE);
+        toggleButton.setOpaque(false);
+        toggleButton.setBorder(BorderFactory.createEmptyBorder());
+        toggleButton.setFocusPainted(false);
+        toggleButton.setContentAreaFilled(false);
+        toggleButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        toggleButton.addActionListener(e -> {
+            if (toggleButton.isSelected()) {
+                passwordField.setEchoChar((char) 0);
+                toggleButton.setText("Hide");
+            } else {
+                passwordField.setEchoChar('\u2022');
+                toggleButton.setText("Show");
+            }
+        });
+        return toggleButton;
     }
 
     private JButton createRoundedAccentButton(String text) {

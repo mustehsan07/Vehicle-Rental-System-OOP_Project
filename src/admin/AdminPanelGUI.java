@@ -1,13 +1,16 @@
 package admin;
 
+import auth.ProVehicleLogin;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.awt.Window;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 
 public class AdminPanelGUI extends JPanel {
 
@@ -62,8 +65,31 @@ public class AdminPanelGUI extends JPanel {
         textWrap.add(javax.swing.Box.createVerticalStrut(6));
         textWrap.add(subtitle);
 
+        RoundedButton logoutButton = new RoundedButton(
+                "Logout",
+                AdminTheme.CARD,
+                AdminTheme.ACCENT_SOFT,
+                AdminTheme.ACCENT,
+                AdminTheme.BORDER,
+                AdminTheme.RADIUS_SMALL
+        );
+        logoutButton.setFont(AdminTheme.BUTTON_FONT);
+        logoutButton.setBorder(BorderFactory.createEmptyBorder(10, 18, 10, 18));
+        logoutButton.addActionListener(e -> {
+            new ProVehicleLogin().setVisible(true);
+            Window window = SwingUtilities.getWindowAncestor(this);
+            if (window != null) {
+                window.dispose();
+            }
+        });
+
+        JPanel actionWrap = new JPanel();
+        actionWrap.setOpaque(false);
+        actionWrap.add(logoutButton);
+
         header.add(accentStrip, BorderLayout.WEST);
         header.add(textWrap, BorderLayout.CENTER);
+        header.add(actionWrap, BorderLayout.EAST);
         return header;
     }
 

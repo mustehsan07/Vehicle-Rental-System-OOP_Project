@@ -1,5 +1,7 @@
 package auth;
 
+import customer.CustomerDashboard;
+import data.CustomerData;
 import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Cursor;
@@ -19,6 +21,8 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
+import javax.swing.JToggleButton;
+import model.Customer;
 
 public class ProVehicleRegister extends JFrame {
     private static final Color ACCENT = new Color(0x0F766E);
@@ -113,6 +117,9 @@ public class ProVehicleRegister extends JFrame {
         passLabel.setBounds(34, 272, 100, 16);
         regCard.add(passLabel);
         JPasswordField passField = createPasswordField();
+        JToggleButton passwordToggle = createPasswordToggleButton(passField);
+        passwordToggle.setBounds(246, 266, 100, 22);
+        regCard.add(passwordToggle);
         passField.setBounds(34, 290, 312, 36);
         regCard.add(passField);
 
@@ -162,7 +169,12 @@ public class ProVehicleRegister extends JFrame {
 
         JOptionPane.showMessageDialog(this, "Customer account created successfully.", "Success", JOptionPane.INFORMATION_MESSAGE);
         dispose();
-        new ProVehicleLogin().setVisible(true);
+        Customer customer = CustomerData.findByEmail(email);
+        if (customer != null) {
+            new CustomerDashboard(customer).setVisible(true);
+        } else {
+            new ProVehicleLogin().setVisible(true);
+        }
     }
 
     private JPanel createCard(int x, int y, int width, int height) {
@@ -203,6 +215,7 @@ public class ProVehicleRegister extends JFrame {
         field.setBackground(BACKGROUND);
         field.setForeground(TEXT_DARK);
         field.setBorder(BorderFactory.createMatteBorder(0, 0, 2, 0, ACCENT));
+        field.setEchoChar('\u2022');
         return field;
     }
 
@@ -235,6 +248,29 @@ public class ProVehicleRegister extends JFrame {
         button.setOpaque(false);
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
         return button;
+    }
+
+    private JToggleButton createPasswordToggleButton(JPasswordField passwordField) {
+        JToggleButton toggleButton = new JToggleButton();
+        toggleButton.setText("Show");
+        toggleButton.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        toggleButton.setForeground(ACCENT);
+        toggleButton.setBackground(Color.WHITE);
+        toggleButton.setOpaque(false);
+        toggleButton.setBorder(BorderFactory.createEmptyBorder());
+        toggleButton.setFocusPainted(false);
+        toggleButton.setContentAreaFilled(false);
+        toggleButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        toggleButton.addActionListener(e -> {
+            if (toggleButton.isSelected()) {
+                passwordField.setEchoChar((char) 0);
+                toggleButton.setText("Hide");
+            } else {
+                passwordField.setEchoChar('\u2022');
+                toggleButton.setText("Show");
+            }
+        });
+        return toggleButton;
     }
 
     private JButton createRoundedLinkButton(String text) {

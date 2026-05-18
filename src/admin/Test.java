@@ -15,6 +15,7 @@ public class Test {
 			JFrame frame = new JFrame("Owner Panel Test");
 			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 			frame.setSize(1200, 760);
+			frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
 			frame.setLocationRelativeTo(null);
 			frame.setContentPane(new AdminPanelGUI());
 			frame.setVisible(true);

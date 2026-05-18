@@ -38,6 +38,11 @@ public final class AuthController {
             return null;
         }
 
+        Admin admin = SampleDataLoader.getAdmin();
+        if (admin != null && normalizedIdentifier.equalsIgnoreCase(admin.getEmail()) && normalizedPassword.equals(admin.getPassword())) {
+            return new AuthRecord("A001", "Administrator", admin.getEmail(), admin.getPassword(), "Active", "admin");
+        }
+
         for (Customer user : CustomerData.getCustomers()) {
             if (normalizedIdentifier.equalsIgnoreCase(user.getEmail()) && normalizedPassword.equals(user.getPassword())) {
                 return new AuthRecord(
@@ -49,11 +54,6 @@ public final class AuthController {
                         "customer"
                 );
             }
-        }
-
-        Admin admin = SampleDataLoader.getAdmin();
-        if (admin != null && normalizedIdentifier.equalsIgnoreCase(admin.getEmail()) && normalizedPassword.equals(admin.getPassword())) {
-            return new AuthRecord("A001", "Administrator", admin.getEmail(), admin.getPassword(), "Active", "admin");
         }
         return null;
     }
