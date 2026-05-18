@@ -3,7 +3,9 @@ package customer;
 import admin.AdminTheme;
 import admin.RoundedButton;
 import admin.RoundedPanel;
-import app.MainClass;
+import data.CustomerData;
+import data.RentalHistoryData;
+import data.SampleDataLoader;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -11,7 +13,6 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridLayout;
-import java.util.ArrayList;
 import java.util.List;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
@@ -27,9 +28,11 @@ import javax.swing.UIManager;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
+import model.Customer;
+import model.RentalHistory;
 
 public class CustomerDashboard extends JFrame {
-    private final MainClass.UserRow customer;
+    private final Customer customer;
     private final DefaultTableModel rentalTableModel;
     private final JLabel nameValue = new JLabel();
     private final JLabel emailValue = new JLabel();
@@ -41,9 +44,9 @@ public class CustomerDashboard extends JFrame {
         this(resolveDefaultCustomer());
     }
 
-    public CustomerDashboard(MainClass.UserRow customer) {
+    public CustomerDashboard(Customer customer) {
         this.customer = customer != null ? customer : resolveDefaultCustomer();
-        rentalTableModel = new DefaultTableModel(new Object[]{"Rental ID", "Vehicle", "Date", "Duration", "Bill"}, 0) {
+        rentalTableModel = new DefaultTableModel(new Object[]{"Rental ID", "Vehicle", "Rent Date", "Return Date", "Duration", "Bill"}, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
                 return false;
@@ -97,7 +100,7 @@ public class CustomerDashboard extends JFrame {
         title.setForeground(AdminTheme.TEXT_PRIMARY);
         title.setAlignmentX(LEFT_ALIGNMENT);
 
-        JLabel subtitle = new JLabel("See your profile, rented vehicles, and rental actions in one premium dashboard");
+        JLabel subtitle = new JLabel("See your profile, returned vehicles, and rental actions in one premium dashboard");
         subtitle.setFont(AdminTheme.SUBTITLE_FONT);
         subtitle.setForeground(AdminTheme.TEXT_SECONDARY);
         subtitle.setAlignmentX(LEFT_ALIGNMENT);
@@ -117,8 +120,8 @@ public class CustomerDashboard extends JFrame {
     private JPanel buildHeaderMeta() {
         JPanel wrap = new JPanel(new GridLayout(2, 1, 0, 10));
         wrap.setOpaque(false);
-        wrap.add(summaryBadge("Customer ID", customer.id));
-        wrap.add(summaryBadge("Current Status", customer.status));
+        wrap.add(summaryBadge("Customer ID", customer.getId()));
+        wrap.add(summaryBadge("Phone", customer.getPhone()));
         return wrap;
     }
 
@@ -171,8 +174,8 @@ public class CustomerDashboard extends JFrame {
         body.setOpaque(false);
         body.add(infoLine("Name", nameValue));
         body.add(infoLine("Email", emailValue));
-        body.add(infoLine("Role", createStaticValue("Customer")));
-        body.add(infoLine("Membership", statusValue));
+        body.add(infoLine("Phone", statusValue));
+        body.add(infoLine("Customer ID", createStaticValue(customer.getId())));
         card.add(body, BorderLayout.CENTER);
         return card;
     }
@@ -237,9 +240,9 @@ public class CustomerDashboard extends JFrame {
     private JPanel buildStatsRow() {
         JPanel row = new JPanel(new GridLayout(1, 3, 14, 0));
         row.setOpaque(false);
-        row.add(metricCard("Rented Vehicles", rentalsValue));
+        row.add(metricCard("Returned Rentals", rentalsValue));
         row.add(metricCard("Total Bill", totalBillValue));
-        row.add(metricCard("Profile", createStaticValue(customer.fullName)));
+        row.add(metricCard("Profile", createStaticValue(customer.getFullName())));
         return row;
     }
 
@@ -248,7 +251,7 @@ public class CustomerDashboard extends JFrame {
         card.setLayout(new BorderLayout(0, 12));
         card.setBorder(BorderFactory.createEmptyBorder(18, 18, 18, 18));
 
-        JLabel heading = new JLabel("Rented Vehicles");
+        JLabel heading = new JLabel("Rental History");
         heading.setFont(AdminTheme.SUBTITLE_FONT);
         heading.setForeground(AdminTheme.TEXT_PRIMARY);
         card.add(heading, BorderLayout.NORTH);
@@ -282,6 +285,7 @@ public class CustomerDashboard extends JFrame {
         table.getColumnModel().getColumn(2).setCellRenderer(centered);
         table.getColumnModel().getColumn(3).setCellRenderer(centered);
         table.getColumnModel().getColumn(4).setCellRenderer(centered);
+        table.getColumnModel().getColumn(5).setCellRenderer(centered);
 
         JScrollPane scrollPane = new JScrollPane(table);
         scrollPane.setBorder(BorderFactory.createEmptyBorder());
@@ -344,31 +348,32 @@ public class CustomerDashboard extends JFrame {
     }
 
     private void loadCustomerInfo() {
-        nameValue.setText(customer.fullName);
-        emailValue.setText(customer.email);
-        statusValue.setText(customer.status);
+        nameValue.setText(customer.getFullName());
+        emailValue.setText(customer.getEmail());
+        statusValue.setText(customer.getPhone());
     }
 
     private void refreshRentalTable() {
         rentalTableModel.setRowCount(0);
-        List<MainClass.RentalHistoryRow> rentals = getCustomerRentals();
+        List<RentalHistory> rentals = getCustomerHistory();
         double totalBill = 0;
-        for (MainClass.RentalHistoryRow row : rentals) {
-            rentalTableModel.addRow(new Object[]{row.id, row.vehicleName, row.date, row.duration, formatMoney(row.bill)});
-            totalBill += row.bill;
+        for (RentalHistory row : rentals) {
+            rentalTableModel.addRow(new Object[]{
+                    row.getHistoryId(),
+                    row.getVehicleDisplayName(),
+                    row.getRentDate(),
+                    row.getReturnDate(),
+                    row.getDays() + " days",
+                    formatMoney(row.getTotalCost())
+            });
+            totalBill += row.getTotalCost();
         }
         rentalsValue.setText(String.valueOf(rentals.size()));
         totalBillValue.setText(formatMoney(totalBill));
     }
 
-    private List<MainClass.RentalHistoryRow> getCustomerRentals() {
-        List<MainClass.RentalHistoryRow> rentals = new ArrayList<>();
-        for (MainClass.RentalHistoryRow row : MainClass.getRentalHistory()) {
-            if (customer.fullName.equalsIgnoreCase(row.customerName) || customer.email.equalsIgnoreCase(row.customerName)) {
-                rentals.add(row);
-            }
-        }
-        return rentals;
+    private List<RentalHistory> getCustomerHistory() {
+        return RentalHistoryData.getHistoryForCustomer(customer.getId());
     }
 
     private void openRentalModule(String actionName) {
@@ -397,15 +402,11 @@ public class CustomerDashboard extends JFrame {
         return String.format("PKR %,.2f", value);
     }
 
-    private static MainClass.UserRow resolveDefaultCustomer() {
-        for (MainClass.UserRow row : MainClass.getUsers()) {
-            if ("customer".equalsIgnoreCase(row.role)) {
-                return row;
-            }
-        }
-        return MainClass.getUsers().isEmpty()
-                ? new MainClass.UserRow("C001", "Customer", "customer@example.com", "", "Active", "customer")
-                : MainClass.getUsers().get(0);
+    private static Customer resolveDefaultCustomer() {
+        SampleDataLoader.loadSampleData();
+        return CustomerData.getCustomers().isEmpty()
+                ? new Customer("C001", "Customer", "customer@example.com", "", "03000000000")
+                : CustomerData.getCustomers().get(0);
     }
 
     public static void main(String[] args) {

@@ -1,10 +1,9 @@
 package auth;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.util.Collections;
-import java.util.List;
+import data.CustomerData;
+import data.SampleDataLoader;
+import model.Admin;
+import model.Customer;
 
 public final class AuthController {
     private AuthController() {
@@ -39,17 +38,22 @@ public final class AuthController {
             return null;
         }
 
-        for (Object user : getUsers()) {
-            if (matchesIdentifier(user, normalizedIdentifier) && normalizedPassword.equals(readField(user, "password"))) {
+        for (Customer user : CustomerData.getCustomers()) {
+            if (normalizedIdentifier.equalsIgnoreCase(user.getEmail()) && normalizedPassword.equals(user.getPassword())) {
                 return new AuthRecord(
-                        readField(user, "id"),
-                        readField(user, "fullName"),
-                        readField(user, "email"),
-                        readField(user, "password"),
-                        readField(user, "status"),
-                        readField(user, "role")
+                        user.getId(),
+                        user.getFullName(),
+                        user.getEmail(),
+                        user.getPassword(),
+                        "Active",
+                        "customer"
                 );
             }
+        }
+
+        Admin admin = SampleDataLoader.getAdmin();
+        if (admin != null && normalizedIdentifier.equalsIgnoreCase(admin.getEmail()) && normalizedPassword.equals(admin.getPassword())) {
+            return new AuthRecord("A001", "Administrator", admin.getEmail(), admin.getPassword(), "Active", "admin");
         }
         return null;
     }
@@ -63,22 +67,18 @@ public final class AuthController {
             return false;
         }
 
-        for (Object user : getUsers()) {
-            if (trimmedEmail.equalsIgnoreCase(readField(user, "email"))) {
+        for (Customer user : CustomerData.getCustomers()) {
+            if (trimmedEmail.equalsIgnoreCase(user.getEmail())) {
                 return false;
             }
         }
 
-        addUser(createUserRow(nextUserId(), trimmedName, trimmedEmail, trimmedPassword, "Active", "customer"));
+        CustomerData.registerCustomer(new Customer(nextUserId(), trimmedName, trimmedEmail, trimmedPassword, ""));
         return true;
     }
 
-    private static boolean matchesIdentifier(Object user, String identifier) {
-        return identifier.equalsIgnoreCase(readField(user, "email"));
-    }
-
     private static String nextUserId() {
-        int nextNumber = getUsers().size() + 1;
+        int nextNumber = CustomerData.getCustomers().size() + 1;
         while (containsUserId(String.format("U%03d", nextNumber))) {
             nextNumber++;
         }
@@ -86,52 +86,12 @@ public final class AuthController {
     }
 
     private static boolean containsUserId(String userId) {
-        for (Object user : getUsers()) {
-            if (userId.equalsIgnoreCase(readField(user, "id"))) {
+        for (Customer user : CustomerData.getCustomers()) {
+            if (userId.equalsIgnoreCase(user.getId())) {
                 return true;
             }
         }
         return false;
-    }
-
-    private static List<?> getUsers() {
-        try {
-            Class<?> mainClass = Class.forName("app.MainClass");
-            Method method = mainClass.getMethod("getUsers");
-            return (List<?>) method.invoke(null);
-        } catch (ReflectiveOperationException ex) {
-            return Collections.emptyList();
-        }
-    }
-
-    private static void addUser(Object userRow) {
-        try {
-            Class<?> mainClass = Class.forName("app.MainClass");
-            Class<?> userRowClass = Class.forName("app.MainClass$UserRow");
-            Method method = mainClass.getMethod("addUser", userRowClass);
-            method.invoke(null, userRow);
-        } catch (ReflectiveOperationException ignored) {
-        }
-    }
-
-    private static Object createUserRow(String id, String fullName, String email, String password, String status, String role) {
-        try {
-            Class<?> userRowClass = Class.forName("app.MainClass$UserRow");
-            Constructor<?> constructor = userRowClass.getConstructor(String.class, String.class, String.class, String.class, String.class, String.class);
-            return constructor.newInstance(id, fullName, email, password, status, role);
-        } catch (ReflectiveOperationException ex) {
-            throw new IllegalStateException("Unable to access shared user store.", ex);
-        }
-    }
-
-    private static String readField(Object target, String fieldName) {
-        try {
-            Field field = target.getClass().getField(fieldName);
-            Object value = field.get(target);
-            return value == null ? "" : String.valueOf(value);
-        } catch (ReflectiveOperationException ex) {
-            return "";
-        }
     }
 
     private static String safeTrim(String value) {
