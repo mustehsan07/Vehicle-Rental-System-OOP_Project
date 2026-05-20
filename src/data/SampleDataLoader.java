@@ -28,7 +28,7 @@ public final class SampleDataLoader {
 
         admin = new Admin("admin@gmail.com", "admin123");
 
-        CustomerData.addCustomer(new Customer("C001", "Mustehsan", "mustehsan@gmail.com", "admin123", "03001234567"));
+        CustomerData.addCustomer(new Customer("C001", "Mustehsan", "mustehsan@gmail.com", "customer123", "03001234567"));
         CustomerData.addCustomer(new Customer("C002", "Ibraheem", "ibraheem@gmail.com", "customer123", "03009876543"));
 
         VehicleData.addVehicle(new Car("V001", "Toyota", "Corolla", 5500, true, 4));
