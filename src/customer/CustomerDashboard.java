@@ -3,6 +3,7 @@ package customer;
 import admin.AdminTheme;
 import admin.RoundedButton;
 import admin.RoundedPanel;
+import auth.ProVehicleLogin;
 import data.CustomerData;
 import data.RentalHistoryData;
 import data.SampleDataLoader;
@@ -13,6 +14,7 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridLayout;
+import java.awt.Window;
 import java.util.List;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
@@ -30,8 +32,11 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
 import model.Customer;
 import model.RentalHistory;
+import vehicle_display.VehicleRentalModuleApp;
 
 public class CustomerDashboard extends JFrame {
+
+    private static Object activeCustomer;
     private final Customer customer;
     private final DefaultTableModel rentalTableModel;
     private final JLabel nameValue = new JLabel();
@@ -41,7 +46,7 @@ public class CustomerDashboard extends JFrame {
     private final JLabel totalBillValue = new JLabel();
 
     public CustomerDashboard() {
-        this(resolveDefaultCustomer());
+        this(resolveCurrentCustomer());
     }
 
     public CustomerDashboard(Customer customer) {
@@ -113,34 +118,39 @@ public class CustomerDashboard extends JFrame {
 
         header.add(accentStrip, BorderLayout.WEST);
         header.add(textWrap, BorderLayout.CENTER);
-        header.add(buildHeaderMeta(), BorderLayout.EAST);
+        header.add(buildLogoutButtonPanel(), BorderLayout.EAST);
         return header;
     }
 
-    private JPanel buildHeaderMeta() {
-        JPanel wrap = new JPanel(new GridLayout(2, 1, 0, 10));
-        wrap.setOpaque(false);
-        wrap.add(summaryBadge("Customer ID", customer.getId()));
-        wrap.add(summaryBadge("Phone", customer.getPhone()));
-        return wrap;
+    private JPanel buildLogoutButtonPanel() {
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
+        panel.setOpaque(false);
+        panel.add(buildLogoutButton());
+        return panel;
     }
 
-    private RoundedPanel summaryBadge(String label, String value) {
-        RoundedPanel card = new RoundedPanel(AdminTheme.CARD_ALT, AdminTheme.RADIUS_MEDIUM, AdminTheme.BORDER_SOFT, 1);
-        card.setLayout(new BorderLayout(0, 2));
-        card.setBorder(BorderFactory.createEmptyBorder(12, 14, 12, 14));
-
-        JLabel labelView = new JLabel(label);
-        labelView.setFont(AdminTheme.CHIP_FONT);
-        labelView.setForeground(AdminTheme.TEXT_SECONDARY);
-
-        JLabel valueView = new JLabel(value != null ? value : "-");
-        valueView.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        valueView.setForeground(AdminTheme.TEXT_PRIMARY);
-
-        card.add(labelView, BorderLayout.NORTH);
-        card.add(valueView, BorderLayout.CENTER);
-        return card;
+    private RoundedButton buildLogoutButton() {
+        RoundedButton logoutButton = new RoundedButton(
+                "Logout",
+                AdminTheme.CARD,
+                AdminTheme.ACCENT_SOFT,
+                AdminTheme.ACCENT,
+                AdminTheme.BORDER,
+                AdminTheme.RADIUS_SMALL
+        );
+        logoutButton.setFont(AdminTheme.BUTTON_FONT);
+        logoutButton.setPreferredSize(new Dimension(110, 30));
+        logoutButton.setMinimumSize(new Dimension(110, 30));
+        logoutButton.setMaximumSize(new Dimension(110, 30));
+        logoutButton.setBorder(BorderFactory.createEmptyBorder(2, 16, 2, 16));
+        logoutButton.addActionListener(event -> {
+            new ProVehicleLogin().setVisible(true);
+            Window window = SwingUtilities.getWindowAncestor(this);
+            if (window != null) {
+                window.dispose();
+            }
+        });
+        return logoutButton;
     }
 
     private JPanel buildCenter() {
@@ -190,7 +200,7 @@ public class CustomerDashboard extends JFrame {
         heading.setForeground(AdminTheme.TEXT_PRIMARY);
         card.add(heading, BorderLayout.NORTH);
 
-        JLabel helper = new JLabel("Start a new rental or process a return using the rental module.");
+        JLabel helper = new JLabel("<html><body style='width:260px'>Rent a vehicle from the display screen or process a return using the rental module.</body></html>");
         helper.setFont(AdminTheme.BODY_FONT);
         helper.setForeground(AdminTheme.TEXT_SECONDARY);
         helper.setVerticalAlignment(SwingConstants.TOP);
@@ -209,7 +219,7 @@ public class CustomerDashboard extends JFrame {
         );
         rentBtn.setFont(AdminTheme.BUTTON_FONT);
         rentBtn.setBorder(BorderFactory.createEmptyBorder(10, 16, 10, 16));
-        rentBtn.addActionListener(e -> openRentalModule("Rent New Vehicle"));
+        rentBtn.addActionListener(e -> openVehicleDisplay());
 
         RoundedButton returnBtn = new RoundedButton(
                 "Return Vehicle",
@@ -359,12 +369,12 @@ public class CustomerDashboard extends JFrame {
         double totalBill = 0;
         for (RentalHistory row : rentals) {
             rentalTableModel.addRow(new Object[]{
-                    row.getHistoryId(),
-                    row.getVehicleDisplayName(),
-                    row.getRentDate(),
-                    row.getReturnDate(),
-                    row.getDays() + " days",
-                    formatMoney(row.getTotalCost())
+                row.getHistoryId(),
+                row.getVehicleDisplayName(),
+                row.getRentDate(),
+                row.getReturnDate(),
+                row.getDays() + " days",
+                formatMoney(row.getTotalCost())
             });
             totalBill += row.getTotalCost();
         }
@@ -398,8 +408,31 @@ public class CustomerDashboard extends JFrame {
         }
     }
 
+    private void openVehicleDisplay() {
+        try {
+            VehicleRentalModuleApp app = new VehicleRentalModuleApp();
+            app.setCurrentCustomer(customer);
+            app.setVisible(true);
+
+            dispose();
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Unable to open the vehicle display screen.", "Launch Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
     private String formatMoney(double value) {
         return String.format("PKR %,.2f", value);
+    }
+
+    public static void setActiveCustomer(Object customer) {
+        activeCustomer = customer;
+    }
+
+    private static Customer resolveCurrentCustomer() {
+        if (activeCustomer instanceof Customer customer) {
+            return customer;
+        }
+        return resolveDefaultCustomer();
     }
 
     private static Customer resolveDefaultCustomer() {

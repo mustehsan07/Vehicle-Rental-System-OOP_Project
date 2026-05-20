@@ -1,3 +1,5 @@
+package vehicle_display;
+
 public class Vehicle {
     private final String vehicleId;
     private final String name;
@@ -6,7 +8,7 @@ public class Vehicle {
     private final int seats;
     private final String transmission;
     private final double dailyRate;
-    private final boolean available;
+    private boolean available;
 
     public Vehicle(
             String vehicleId,
@@ -57,5 +59,13 @@ public class Vehicle {
 
     public boolean isAvailable() {
         return available;
+    }
+
+    public void rent() {
+        available = false;
+    }
+
+    public String getDisplayName() {
+        return brand + " " + name + " (" + vehicleId + ")";
     }
 }

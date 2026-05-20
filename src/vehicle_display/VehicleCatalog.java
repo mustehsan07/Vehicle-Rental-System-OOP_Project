@@ -1,3 +1,5 @@
+package vehicle_display;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -19,6 +21,29 @@ public class VehicleCatalog {
             }
         }
         return Collections.unmodifiableList(result);
+    }
+
+    public Vehicle findVehicleById(String vehicleId) {
+        if (vehicleId == null) {
+            return null;
+        }
+
+        for (Vehicle vehicle : vehicles) {
+            if (vehicle.getVehicleId().equalsIgnoreCase(vehicleId)) {
+                return vehicle;
+            }
+        }
+        return null;
+    }
+
+    public boolean rentVehicle(String vehicleId) {
+        Vehicle vehicle = findVehicleById(vehicleId);
+        if (vehicle == null || !vehicle.isAvailable()) {
+            return false;
+        }
+
+        vehicle.rent();
+        return true;
     }
 
     public List<Vehicle> searchAvailableVehicles(String keyword, String type) {
