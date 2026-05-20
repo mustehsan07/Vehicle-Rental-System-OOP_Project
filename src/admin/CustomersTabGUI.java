@@ -8,7 +8,6 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
-import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -26,7 +25,7 @@ public class CustomersTabGUI extends RoundedPanel {
     private final JTextField idField = createField();
     private final JTextField nameField = createField();
     private final JTextField emailField = createField();
-    private final JComboBox<String> statusBox = new RoundedComboBox<>(new String[]{"Active", "Blocked"}, AdminTheme.RADIUS_SMALL);
+    private final JTextField phoneField = createField();
 
     public CustomersTabGUI(CustomerManagementService service) {
         super(AdminTheme.BACKGROUND, AdminTheme.RADIUS_LARGE, AdminTheme.BORDER, 1);
@@ -34,7 +33,7 @@ public class CustomersTabGUI extends RoundedPanel {
         setLayout(new BorderLayout(16, 16));
         setBorder(BorderFactory.createEmptyBorder(16, 16, 16, 16));
 
-        tableModel = new DefaultTableModel(new Object[]{"ID", "Name", "Email", "Status"}, 0) {
+        tableModel = new DefaultTableModel(new Object[]{"ID", "Name", "Email", "Phone", "Active Rentals"}, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
                 return false;
@@ -106,12 +105,11 @@ public class CustomersTabGUI extends RoundedPanel {
         fields.add(label("ID"));
         fields.add(label("Name"));
         fields.add(label("Email"));
-        fields.add(label("Status"));
+        fields.add(label("Phone"));
         fields.add(idField);
         fields.add(nameField);
         fields.add(emailField);
-        fields.add(statusBox);
-        statusBox.setPreferredSize(new java.awt.Dimension(0, 40));
+        fields.add(phoneField);
 
         JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         actions.setBackground(AdminTheme.CARD);
@@ -203,20 +201,20 @@ public class CustomersTabGUI extends RoundedPanel {
         String id = idField.getText().trim();
         String name = nameField.getText().trim();
         String email = emailField.getText().trim();
-        String status = (String) statusBox.getSelectedItem();
+        String phone = phoneField.getText().trim();
         if (id.isEmpty() || name.isEmpty() || email.isEmpty()) {
             throw new IllegalArgumentException("Please fill all fields.");
         }
         if (!email.contains("@") || !email.contains(".")) {
             throw new IllegalArgumentException("Enter a valid email.");
         }
-        return new CustomerManagementService.CustomerRecord(id, name, email, status);
+        return new CustomerManagementService.CustomerRecord(id, name, email, phone, 0);
     }
 
     private void refreshTable() {
         tableModel.setRowCount(0);
         for (CustomerManagementService.CustomerRecord record : service.getAll()) {
-            tableModel.addRow(new Object[]{record.id, record.name, record.email, record.status});
+            tableModel.addRow(new Object[]{record.id, record.name, record.email, record.phone, record.activeRentals});
         }
     }
 
@@ -224,7 +222,7 @@ public class CustomersTabGUI extends RoundedPanel {
         idField.setText("");
         nameField.setText("");
         emailField.setText("");
-        statusBox.setSelectedIndex(0);
+        phoneField.setText("");
     }
 
     private JTextField createField() {
@@ -250,6 +248,6 @@ public class CustomersTabGUI extends RoundedPanel {
         idField.setText(String.valueOf(tableModel.getValueAt(modelRow, 0)));
         nameField.setText(String.valueOf(tableModel.getValueAt(modelRow, 1)));
         emailField.setText(String.valueOf(tableModel.getValueAt(modelRow, 2)));
-        statusBox.setSelectedItem(String.valueOf(tableModel.getValueAt(modelRow, 3)));
+        phoneField.setText(String.valueOf(tableModel.getValueAt(modelRow, 3)));
     }
 }

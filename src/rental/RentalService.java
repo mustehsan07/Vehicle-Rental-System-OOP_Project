@@ -1,4 +1,4 @@
-package vehiclerental;
+package rental;
 
 import java.time.LocalDate;
 import java.util.ArrayList;

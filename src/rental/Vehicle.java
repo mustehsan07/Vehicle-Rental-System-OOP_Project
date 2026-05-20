@@ -1,4 +1,4 @@
-package vehiclerental;
+package rental;
 
 public class Vehicle {
     private final String vehicleId;

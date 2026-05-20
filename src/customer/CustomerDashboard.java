@@ -5,11 +5,12 @@ import admin.RoundedButton;
 import admin.RoundedPanel;
 import auth.ProVehicleLogin;
 import data.CustomerData;
+import data.RentalData;
 import data.RentalHistoryData;
 import data.SampleDataLoader;
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Component;
+import java.awt.Dialog;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
@@ -18,32 +19,37 @@ import java.awt.Window;
 import java.util.List;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
+import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
-import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableCellRenderer;
 import model.Customer;
 import model.RentalHistory;
+import rental_history.RentalHistoryPanel;
 import vehicle_display.VehicleRentalModuleApp;
 
 public class CustomerDashboard extends JFrame {
 
     private static Object activeCustomer;
     private final Customer customer;
-    private final DefaultTableModel rentalTableModel;
+    private final DefaultTableModel activeRentalTableModel;
+    private final RentalHistoryPanel rentalHistoryPanel;
+    private final JTable activeRentalTable;
     private final JLabel nameValue = new JLabel();
     private final JLabel emailValue = new JLabel();
     private final JLabel statusValue = new JLabel();
-    private final JLabel rentalsValue = new JLabel();
-    private final JLabel totalBillValue = new JLabel();
+    private final JLabel totalRentalsValue = new JLabel();
+    private final JLabel totalPaidValue = new JLabel();
+    private final JLabel totalPayableValue = new JLabel();
 
     public CustomerDashboard() {
         this(resolveCurrentCustomer());
@@ -51,12 +57,14 @@ public class CustomerDashboard extends JFrame {
 
     public CustomerDashboard(Customer customer) {
         this.customer = customer != null ? customer : resolveDefaultCustomer();
-        rentalTableModel = new DefaultTableModel(new Object[]{"Rental ID", "Vehicle", "Rent Date", "Return Date", "Duration", "Bill"}, 0) {
+        activeRentalTableModel = new DefaultTableModel(new Object[]{"Rental ID", "Vehicle", "Rent Date", "Days", "Payable"}, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
                 return false;
             }
         };
+        rentalHistoryPanel = new RentalHistoryPanel();
+        activeRentalTable = new JTable(activeRentalTableModel);
 
         setTitle("Customer Dashboard");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -66,7 +74,7 @@ public class CustomerDashboard extends JFrame {
 
         setContentPane(buildMainPanel());
         loadCustomerInfo();
-        refreshRentalTable();
+        refreshRentalViews();
     }
 
     private JPanel buildMainPanel() {
@@ -145,10 +153,7 @@ public class CustomerDashboard extends JFrame {
         logoutButton.setBorder(BorderFactory.createEmptyBorder(2, 16, 2, 16));
         logoutButton.addActionListener(event -> {
             new ProVehicleLogin().setVisible(true);
-            Window window = SwingUtilities.getWindowAncestor(this);
-            if (window != null) {
-                window.dispose();
-            }
+            CustomerDashboard.this.dispose();
         });
         return logoutButton;
     }
@@ -200,7 +205,7 @@ public class CustomerDashboard extends JFrame {
         heading.setForeground(AdminTheme.TEXT_PRIMARY);
         card.add(heading, BorderLayout.NORTH);
 
-        JLabel helper = new JLabel("<html><body style='width:260px'>Rent a vehicle from the display screen or process a return using the rental module.</body></html>");
+        JLabel helper = new JLabel("<html><body style='width:260px'>Rent a vehicle from the display screen or process a return using the rented vehicles table.</body></html>");
         helper.setFont(AdminTheme.BODY_FONT);
         helper.setForeground(AdminTheme.TEXT_SECONDARY);
         helper.setVerticalAlignment(SwingConstants.TOP);
@@ -231,7 +236,7 @@ public class CustomerDashboard extends JFrame {
         );
         returnBtn.setFont(AdminTheme.BUTTON_FONT);
         returnBtn.setBorder(BorderFactory.createEmptyBorder(10, 16, 10, 16));
-        returnBtn.addActionListener(e -> openRentalModule("Return Vehicle"));
+        returnBtn.addActionListener(e -> openReturnPopup());
 
         buttons.add(rentBtn);
         buttons.add(returnBtn);
@@ -243,16 +248,20 @@ public class CustomerDashboard extends JFrame {
         JPanel right = new JPanel(new BorderLayout(0, 18));
         right.setOpaque(false);
         right.add(buildStatsRow(), BorderLayout.NORTH);
-        right.add(buildRentalTableCard(), BorderLayout.CENTER);
+        JPanel recordsStack = new JPanel(new GridLayout(2, 1, 0, 18));
+        recordsStack.setOpaque(false);
+        recordsStack.add(buildActiveRentalCard());
+        recordsStack.add(buildRentalTableCard());
+        right.add(recordsStack, BorderLayout.CENTER);
         return right;
     }
 
     private JPanel buildStatsRow() {
         JPanel row = new JPanel(new GridLayout(1, 3, 14, 0));
         row.setOpaque(false);
-        row.add(metricCard("Returned Rentals", rentalsValue));
-        row.add(metricCard("Total Bill", totalBillValue));
-        row.add(metricCard("Profile", createStaticValue(customer.getFullName())));
+        row.add(metricCard("Total Rentals", totalRentalsValue));
+        row.add(metricCard("Total Paid", totalPaidValue));
+        row.add(metricCard("Total Payable", totalPayableValue));
         return row;
     }
 
@@ -266,16 +275,22 @@ public class CustomerDashboard extends JFrame {
         heading.setForeground(AdminTheme.TEXT_PRIMARY);
         card.add(heading, BorderLayout.NORTH);
 
-        JTable table = new JTable(rentalTableModel) {
-            @Override
-            public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
-                Component component = super.prepareRenderer(renderer, row, column);
-                if (!isRowSelected(row)) {
-                    component.setBackground(row % 2 == 0 ? AdminTheme.CARD : AdminTheme.CARD_ALT);
-                }
-                return component;
-            }
-        };
+        // Delegated to RentalHistoryPanel (styled consistently)
+        card.add(rentalHistoryPanel, BorderLayout.CENTER);
+        return card;
+    }
+
+    private JPanel buildActiveRentalCard() {
+        RoundedPanel card = new RoundedPanel(AdminTheme.CARD, AdminTheme.RADIUS_LARGE, AdminTheme.BORDER, 1);
+        card.setLayout(new BorderLayout(0, 12));
+        card.setBorder(BorderFactory.createEmptyBorder(18, 18, 18, 18));
+
+        JLabel heading = new JLabel("Rented Vehicles");
+        heading.setFont(AdminTheme.SUBTITLE_FONT);
+        heading.setForeground(AdminTheme.TEXT_PRIMARY);
+        card.add(heading, BorderLayout.NORTH);
+
+        JTable table = activeRentalTable;
         table.setRowHeight(30);
         table.setShowGrid(false);
         table.setIntercellSpacing(new Dimension(0, 0));
@@ -289,13 +304,6 @@ public class CustomerDashboard extends JFrame {
         table.getTableHeader().setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, AdminTheme.BORDER));
         table.setSelectionBackground(AdminTheme.ACCENT);
         table.setSelectionForeground(Color.WHITE);
-        DefaultTableCellRenderer centered = new DefaultTableCellRenderer();
-        centered.setHorizontalAlignment(SwingConstants.CENTER);
-        table.getColumnModel().getColumn(0).setCellRenderer(centered);
-        table.getColumnModel().getColumn(2).setCellRenderer(centered);
-        table.getColumnModel().getColumn(3).setCellRenderer(centered);
-        table.getColumnModel().getColumn(4).setCellRenderer(centered);
-        table.getColumnModel().getColumn(5).setCellRenderer(centered);
 
         JScrollPane scrollPane = new JScrollPane(table);
         scrollPane.setBorder(BorderFactory.createEmptyBorder());
@@ -363,60 +371,235 @@ public class CustomerDashboard extends JFrame {
         statusValue.setText(customer.getPhone());
     }
 
-    private void refreshRentalTable() {
-        rentalTableModel.setRowCount(0);
-        List<RentalHistory> rentals = getCustomerHistory();
-        double totalBill = 0;
-        for (RentalHistory row : rentals) {
-            rentalTableModel.addRow(new Object[]{
-                row.getHistoryId(),
-                row.getVehicleDisplayName(),
-                row.getRentDate(),
-                row.getReturnDate(),
-                row.getDays() + " days",
-                formatMoney(row.getTotalCost())
+    private void refreshRentalViews() {
+        refreshActiveRentalTable();
+        refreshRentalTable();
+    }
+
+    private void refreshActiveRentalTable() {
+        activeRentalTableModel.setRowCount(0);
+        List<model.Rental> rentals = RentalData.getActiveRentalsForCustomer(customer);
+        double payableTotal = 0;
+        for (model.Rental rental : rentals) {
+            activeRentalTableModel.addRow(new Object[]{
+                    rental.getRentalId(),
+                    rental.getVehicle().getBrand() + " " + rental.getVehicle().getModel(),
+                    rental.getRentDate(),
+                    rental.getDays(),
+                    formatMoney(rental.getTotalCost())
             });
-            totalBill += row.getTotalCost();
+            payableTotal += rental.getTotalCost();
         }
-        rentalsValue.setText(String.valueOf(rentals.size()));
-        totalBillValue.setText(formatMoney(totalBill));
+        totalRentalsValue.setText(String.valueOf(rentals.size()));
+        totalPayableValue.setText(formatMoney(payableTotal));
+    }
+
+    private void refreshRentalTable() {
+        List<RentalHistory> rentals = getCustomerHistory();
+        double totalPaid = 0;
+        for (RentalHistory row : rentals) {
+            totalPaid += row.getTotalCost();
+        }
+        totalPaidValue.setText(formatMoney(totalPaid));
+        rentalHistoryPanel.refreshWithData(rentals);
     }
 
     private List<RentalHistory> getCustomerHistory() {
         return RentalHistoryData.getHistoryForCustomer(customer.getId());
     }
 
-    private void openRentalModule(String actionName) {
-        int choice = JOptionPane.showConfirmDialog(
-                this,
-                "Open the Rent & Return module to " + actionName.toLowerCase() + "?",
-                actionName,
-                JOptionPane.YES_NO_OPTION,
-                JOptionPane.INFORMATION_MESSAGE
-        );
-        if (choice == JOptionPane.YES_OPTION) {
-            try {
-                Class<?> rentalAppClass = Class.forName("vehiclerental.VehicleRentalApp");
-                JFrame rentalFrame = (JFrame) rentalAppClass.getConstructor().newInstance();
-                rentalFrame.setVisible(true);
-                dispose();
-            } catch (ClassNotFoundException ex) {
-                JOptionPane.showMessageDialog(this, "Unable to open the rental module.", "Launch Error", JOptionPane.ERROR_MESSAGE);
-            } catch (ReflectiveOperationException ex) {
-                JOptionPane.showMessageDialog(this, "Unable to open the rental module.", "Launch Error", JOptionPane.ERROR_MESSAGE);
-            }
-        }
-    }
-
     private void openVehicleDisplay() {
         try {
+            VehicleRentalModuleApp.setCurrentCustomer(customer);
             VehicleRentalModuleApp app = new VehicleRentalModuleApp();
-            app.setCurrentCustomer(customer);
             app.setVisible(true);
 
             dispose();
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(this, "Unable to open the vehicle display screen.", "Launch Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void openReturnPopup() {
+        model.Rental rental = getSelectedActiveRental();
+        if (rental == null) {
+            JOptionPane.showMessageDialog(this, "Please select a rented vehicle from the rented vehicles table.", "Input Required", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        ReturnPopupDialog dialog = new ReturnPopupDialog(this, rental);
+        dialog.setLocationRelativeTo(this);
+        dialog.setVisible(true);
+    }
+
+    private model.Rental getSelectedActiveRental() {
+        int selectedRow = activeRentalTable.getSelectedRow();
+        if (selectedRow < 0) {
+            return null;
+        }
+
+        List<model.Rental> rentals = RentalData.getActiveRentalsForCustomer(customer);
+        if (selectedRow >= rentals.size()) {
+            return null;
+        }
+        return rentals.get(selectedRow);
+    }
+
+    private void completeReturn(model.Rental rental) {
+        rental.setReturnDate(java.time.LocalDate.now().toString());
+        rental.setStatus("Returned");
+        rental.getVehicle().setAvailable(true);
+        RentalHistoryData.addHistoryFromRental(rental);
+        RentalData.removeRental(rental.getRentalId());
+
+        try {
+            Class<?> catalogClass = Class.forName("vehicle_display.VehicleCatalog");
+            Object catalog = catalogClass.getConstructor().newInstance();
+            catalogClass.getMethod("returnVehicle", String.class).invoke(catalog, rental.getVehicle().getId());
+        } catch (ReflectiveOperationException ignored) {
+        }
+
+        refreshRentalViews();
+    }
+
+    private class ReturnPopupDialog extends JDialog {
+        private final model.Rental rental;
+
+        private ReturnPopupDialog(Window owner, model.Rental rental) {
+            super(owner, "Return Vehicle", Dialog.ModalityType.APPLICATION_MODAL);
+            this.rental = rental;
+            buildUi();
+        }
+
+        private void buildUi() {
+            setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+            setResizable(false);
+            setSize(new Dimension(520, 320));
+
+            JPanel root = new JPanel(new BorderLayout(0, 14));
+            root.setBorder(BorderFactory.createEmptyBorder(18, 18, 18, 18));
+            root.setBackground(Color.WHITE);
+
+            JLabel heading = new JLabel("Return Vehicle");
+            heading.setFont(new Font("Segoe UI", Font.BOLD, 22));
+            heading.setForeground(AdminTheme.TEXT_PRIMARY);
+            root.add(heading, BorderLayout.NORTH);
+
+            JPanel body = new JPanel();
+            body.setLayout(new BoxLayout(body, BoxLayout.Y_AXIS));
+            body.setOpaque(false);
+            body.add(popupLine("Vehicle", rental.getVehicle().getBrand() + " " + rental.getVehicle().getModel() + " (" + rental.getVehicle().getId() + ")"));
+            body.add(popupLine("Customer", customer.getFullName()));
+            body.add(popupLine("Total Payable", formatMoney(rental.getTotalCost())));
+            root.add(body, BorderLayout.CENTER);
+
+            JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+            actions.setOpaque(false);
+            RoundedButton payReturnButton = new RoundedButton(
+                    "Pay & Return",
+                    AdminTheme.ACCENT,
+                    AdminTheme.ACCENT_HOVER,
+                    Color.WHITE,
+                    AdminTheme.ACCENT,
+                    AdminTheme.RADIUS_SMALL
+            );
+            payReturnButton.setFont(AdminTheme.BUTTON_FONT);
+            payReturnButton.setBorder(BorderFactory.createEmptyBorder(10, 16, 10, 16));
+            payReturnButton.addActionListener(event -> openPaymentPopup());
+            actions.add(payReturnButton);
+            root.add(actions, BorderLayout.SOUTH);
+
+            setContentPane(root);
+        }
+
+        private JPanel popupLine(String label, String value) {
+            JPanel line = new JPanel(new BorderLayout(0, 2));
+            line.setOpaque(false);
+            line.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
+
+            JLabel labelView = new JLabel(label);
+            labelView.setFont(AdminTheme.CHIP_FONT);
+            labelView.setForeground(AdminTheme.TEXT_SECONDARY);
+
+            JLabel valueView = new JLabel(value);
+            valueView.setFont(new Font("Segoe UI", Font.BOLD, 14));
+            valueView.setForeground(AdminTheme.TEXT_PRIMARY);
+
+            line.add(labelView, BorderLayout.NORTH);
+            line.add(valueView, BorderLayout.CENTER);
+            return line;
+        }
+
+        private void openPaymentPopup() {
+            JDialog paymentDialog = new JDialog(this, "Pay Amount", Dialog.ModalityType.APPLICATION_MODAL);
+            paymentDialog.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+            paymentDialog.setResizable(false);
+            paymentDialog.setSize(new Dimension(420, 220));
+
+            JPanel root = new JPanel(new BorderLayout(0, 14));
+            root.setBorder(BorderFactory.createEmptyBorder(18, 18, 18, 18));
+            root.setBackground(Color.WHITE);
+
+            JLabel title = new JLabel("Enter Exact Payable Amount");
+            title.setFont(new Font("Segoe UI", Font.BOLD, 18));
+            title.setForeground(AdminTheme.TEXT_PRIMARY);
+            root.add(title, BorderLayout.NORTH);
+
+            JTextField amountField = new JTextField();
+            amountField.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+            amountField.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(new Color(203, 213, 225)),
+                    new EmptyBorder(0, 10, 0, 10)
+            ));
+
+            JLabel note = new JLabel("Total payable: " + formatMoney(rental.getTotalCost()));
+            note.setForeground(AdminTheme.TEXT_SECONDARY);
+            note.setFont(AdminTheme.BODY_FONT);
+
+            JPanel body = new JPanel(new BorderLayout(0, 8));
+            body.setOpaque(false);
+            body.add(note, BorderLayout.NORTH);
+            body.add(amountField, BorderLayout.CENTER);
+            root.add(body, BorderLayout.CENTER);
+
+            JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+            actions.setOpaque(false);
+            RoundedButton payButton = new RoundedButton(
+                    "Pay",
+                    AdminTheme.ACCENT,
+                    AdminTheme.ACCENT_HOVER,
+                    Color.WHITE,
+                    AdminTheme.ACCENT,
+                    AdminTheme.RADIUS_SMALL
+            );
+            payButton.setFont(AdminTheme.BUTTON_FONT);
+            payButton.setBorder(BorderFactory.createEmptyBorder(10, 16, 10, 16));
+            payButton.addActionListener(event -> {
+                double enteredAmount;
+                try {
+                    enteredAmount = Double.parseDouble(amountField.getText().trim());
+                } catch (NumberFormatException ex) {
+                    JOptionPane.showMessageDialog(paymentDialog, "Please input exact payable amount " + formatMoney(rental.getTotalCost()), "Payment Required", JOptionPane.INFORMATION_MESSAGE);
+                    return;
+                }
+
+                double payableAmount = rental.getTotalCost();
+                if (Math.abs(enteredAmount - payableAmount) > 0.009) {
+                    JOptionPane.showMessageDialog(paymentDialog, "Please input exact payable amount " + formatMoney(payableAmount), "Payment Required", JOptionPane.INFORMATION_MESSAGE);
+                    return;
+                }
+
+                completeReturn(rental);
+                paymentDialog.dispose();
+                ReturnPopupDialog.this.dispose();
+                JOptionPane.showMessageDialog(CustomerDashboard.this, "Vehicle Returned, Thanks", "Return Completed", JOptionPane.INFORMATION_MESSAGE);
+            });
+            actions.add(payButton);
+            root.add(actions, BorderLayout.SOUTH);
+
+            paymentDialog.setContentPane(root);
+            paymentDialog.setLocationRelativeTo(ReturnPopupDialog.this);
+            paymentDialog.setVisible(true);
         }
     }
 

@@ -32,6 +32,27 @@ public final class CustomerData {
         return true;
     }
 
+    public static boolean updateCustomer(Customer customer) {
+        if (customer == null) {
+            return false;
+        }
+        Customer existing = findById(customer.getId());
+        if (existing == null) {
+            return false;
+        }
+        int index = CUSTOMERS.indexOf(existing);
+        CUSTOMERS.set(index, customer);
+        return true;
+    }
+
+    public static boolean removeCustomer(String customerId) {
+        Customer customer = findById(customerId);
+        if (customer == null) {
+            return false;
+        }
+        return CUSTOMERS.remove(customer);
+    }
+
     public static List<Customer> getCustomers() {
         return Collections.unmodifiableList(CUSTOMERS);
     }

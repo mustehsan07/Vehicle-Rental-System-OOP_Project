@@ -24,8 +24,9 @@ public class VehiclesTabGUI extends RoundedPanel {
     private JTable table;
 
     private final JTextField idField = createField();
-    private final JComboBox<String> typeBox = new RoundedComboBox<>(new String[]{"Car", "Bike", "Van"}, AdminTheme.RADIUS_SMALL);
-    private final JTextField nameField = createField();
+    private final JComboBox<String> typeBox = new RoundedComboBox<>(new String[]{"Car", "Bike", "Truck"}, AdminTheme.RADIUS_SMALL);
+    private final JTextField brandField = createField();
+    private final JTextField modelField = createField();
     private final JTextField rateField = createField();
     private final JComboBox<String> statusBox = new RoundedComboBox<>(new String[]{"Available", "Rented"}, AdminTheme.RADIUS_SMALL);
 
@@ -35,7 +36,7 @@ public class VehiclesTabGUI extends RoundedPanel {
         setLayout(new BorderLayout(16, 16));
         setBorder(BorderFactory.createEmptyBorder(16, 16, 16, 16));
 
-        tableModel = new DefaultTableModel(new Object[]{"ID", "Type", "Vehicle Name", "Status", "Rate/Day"}, 0) {
+        tableModel = new DefaultTableModel(new Object[]{"ID", "Type", "Brand", "Model", "Status", "Rate/Day"}, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
                 return false;
@@ -102,16 +103,18 @@ public class VehiclesTabGUI extends RoundedPanel {
         card.setLayout(new BorderLayout(8, 8));
         card.setBorder(BorderFactory.createEmptyBorder(14, 14, 14, 14));
 
-        JPanel fields = new JPanel(new GridLayout(2, 5, 4, 4));
+        JPanel fields = new JPanel(new GridLayout(2, 6, 4, 4));
         fields.setBackground(AdminTheme.CARD);
         fields.add(label("ID"));
         fields.add(label("Type"));
-        fields.add(label("Vehicle Name"));
+        fields.add(label("Brand"));
+        fields.add(label("Model"));
         fields.add(label("Rate"));
         fields.add(label("Status"));
         fields.add(idField);
         fields.add(typeBox);
-        fields.add(nameField);
+        fields.add(brandField);
+        fields.add(modelField);
         fields.add(rateField);
         fields.add(statusBox);
         typeBox.setPreferredSize(new java.awt.Dimension(0, 40));
@@ -206,9 +209,10 @@ public class VehiclesTabGUI extends RoundedPanel {
     private VehicleManagementService.VehicleRecord readForm() {
         String id = idField.getText().trim();
         String type = String.valueOf(typeBox.getSelectedItem());
-        String name = nameField.getText().trim();
+        String brand = brandField.getText().trim();
+        String model = modelField.getText().trim();
         String rateText = rateField.getText().trim();
-        if (id.isEmpty() || type.isEmpty() || name.isEmpty() || rateText.isEmpty()) {
+        if (id.isEmpty() || type.isEmpty() || brand.isEmpty() || model.isEmpty() || rateText.isEmpty()) {
             throw new IllegalArgumentException("Please fill all fields.");
         }
         double rate;
@@ -218,7 +222,7 @@ public class VehiclesTabGUI extends RoundedPanel {
             throw new IllegalArgumentException("Rate must be numeric.");
         }
         boolean available = "Available".equals(statusBox.getSelectedItem());
-        return new VehicleManagementService.VehicleRecord(id, type, name, available, rate);
+        return new VehicleManagementService.VehicleRecord(id, type, brand, model, available, rate);
     }
 
     private void refreshTable() {
@@ -227,6 +231,7 @@ public class VehiclesTabGUI extends RoundedPanel {
             tableModel.addRow(new Object[]{
                     record.id,
                     record.type,
+                    record.brand,
                     record.model,
                     record.available ? "Available" : "Rented",
                     String.format("%.2f", record.dailyRate)
@@ -237,7 +242,8 @@ public class VehiclesTabGUI extends RoundedPanel {
     private void clearForm() {
         idField.setText("");
         typeBox.setSelectedIndex(0);
-        nameField.setText("");
+        brandField.setText("");
+        modelField.setText("");
         rateField.setText("");
         statusBox.setSelectedIndex(0);
     }
@@ -264,8 +270,9 @@ public class VehiclesTabGUI extends RoundedPanel {
         int modelRow = table.convertRowIndexToModel(viewRow);
         idField.setText(String.valueOf(tableModel.getValueAt(modelRow, 0)));
         typeBox.setSelectedItem(String.valueOf(tableModel.getValueAt(modelRow, 1)));
-        nameField.setText(String.valueOf(tableModel.getValueAt(modelRow, 2)));
-        statusBox.setSelectedItem(String.valueOf(tableModel.getValueAt(modelRow, 3)));
-        rateField.setText(String.valueOf(tableModel.getValueAt(modelRow, 4)));
+        brandField.setText(String.valueOf(tableModel.getValueAt(modelRow, 2)));
+        modelField.setText(String.valueOf(tableModel.getValueAt(modelRow, 3)));
+        statusBox.setSelectedItem(String.valueOf(tableModel.getValueAt(modelRow, 4)));
+        rateField.setText(String.valueOf(tableModel.getValueAt(modelRow, 5)));
     }
 }

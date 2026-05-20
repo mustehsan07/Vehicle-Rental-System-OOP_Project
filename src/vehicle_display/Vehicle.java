@@ -65,6 +65,10 @@ public class Vehicle {
         available = false;
     }
 
+    public void returnVehicle() {
+        available = true;
+    }
+
     public String getDisplayName() {
         return brand + " " + name + " (" + vehicleId + ")";
     }

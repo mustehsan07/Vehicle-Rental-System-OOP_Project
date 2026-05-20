@@ -4,7 +4,9 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Cursor;
+import java.awt.Dialog;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GradientPaint;
 import java.awt.Graphics;
@@ -13,6 +15,7 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.RenderingHints;
+import java.awt.Window;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.text.NumberFormat;
@@ -24,6 +27,7 @@ import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
@@ -288,7 +292,7 @@ public class VehicleRentalModuleApp extends JFrame {
 
         rentButton = createPrimaryButton("Rent This Vehicle");
         rentButton.setEnabled(false);
-        rentButton.addActionListener(event -> rentSelectedVehicle());
+        rentButton.addActionListener(event -> openRentPopup());
         gbc.gridy = 4;
         gbc.insets = new Insets(10, 0, 0, 0);
         card.add(rentButton, gbc);
@@ -533,20 +537,15 @@ public class VehicleRentalModuleApp extends JFrame {
         updateRentButtonState(true);
     }
 
-    private void rentSelectedVehicle() {
+    private void openRentPopup() {
         Vehicle selectedVehicle = tableModel.getVehicleAt(selectedRow);
         if (selectedVehicle == null) {
             return;
         }
 
-        if (!catalog.rentVehicle(selectedVehicle.getVehicleId())) {
-            statusLabel.setText("This vehicle is no longer available.");
-            applyFilters();
-            return;
-        }
-
-        statusLabel.setText(selectedVehicle.getDisplayName() + " status changed to Rented.");
-        applyFilters();
+        RentPopupDialog dialog = new RentPopupDialog(this, selectedVehicle, customer, this::afterRentalCreated);
+        dialog.setLocationRelativeTo(this);
+        dialog.setVisible(true);
     }
 
     private void selectVehicleRow(int row) {
@@ -558,6 +557,11 @@ public class VehicleRentalModuleApp extends JFrame {
         vehicleTable.repaint();
         updateSelectionDetails();
         statusLabel.setText("Selected " + tableModel.getVehicleAt(row).getDisplayName() + ".");
+    }
+
+    private void afterRentalCreated() {
+        statusLabel.setText("Vehicle rented successfully.");
+        applyFilters();
     }
 
     private void updateRentButtonState(boolean enabled) {
@@ -594,6 +598,239 @@ public class VehicleRentalModuleApp extends JFrame {
             dispose();
         } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException | java.lang.reflect.InvocationTargetException | InstantiationException ex) {
             statusLabel.setText("Unable to open the customer dashboard.");
+        }
+    }
+
+    private static String invokeString(Object target, String methodName) throws ReflectiveOperationException {
+        return String.valueOf(target.getClass().getMethod(methodName).invoke(target));
+    }
+
+    private class RentPopupDialog extends javax.swing.JDialog {
+        private final Vehicle selectedVehicle;
+        private final Object customer;
+        private final Runnable onCompleted;
+        private final JTextField durationField = new RoundedTextField("1");
+        private final JLabel totalLabel = new JLabel();
+
+        private RentPopupDialog(Window owner, Vehicle selectedVehicle, Object customer, Runnable onCompleted) {
+            super(owner, "Rent Vehicle", Dialog.ModalityType.APPLICATION_MODAL);
+            this.selectedVehicle = selectedVehicle;
+            this.customer = customer;
+            this.onCompleted = onCompleted;
+            buildUi();
+            updateTotal();
+        }
+
+        private void buildUi() {
+            setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+            setResizable(false);
+            setSize(new Dimension(520, 430));
+
+            JPanel root = new JPanel(new BorderLayout(0, 14));
+            root.setBorder(new EmptyBorder(18, 18, 18, 18));
+            root.setBackground(Color.WHITE);
+
+            JLabel heading = new JLabel("Rent This Vehicle");
+            heading.setFont(new Font("Segoe UI", Font.BOLD, 22));
+            heading.setForeground(TEXT);
+            root.add(heading, BorderLayout.NORTH);
+
+            JPanel body = new JPanel();
+            body.setLayout(new javax.swing.BoxLayout(body, javax.swing.BoxLayout.Y_AXIS));
+            body.setOpaque(false);
+            body.add(infoRow("Vehicle", selectedVehicle.getDisplayName()));
+            body.add(infoRow("Rate / Day", currencyFormat.format(selectedVehicle.getDailyRate())));
+            body.add(infoRow("Customer", getCustomerDisplayName()));
+            body.add(infoFieldRow("Duration (days)", durationField));
+            body.add(infoRow("Total", totalLabel));
+
+            durationField.setColumns(12);
+            durationField.setMaximumSize(new Dimension(260, 40));
+            durationField.setPreferredSize(new Dimension(260, 40));
+            durationField.setMinimumSize(new Dimension(180, 40));
+            durationField.setAlignmentX(LEFT_ALIGNMENT);
+            durationField.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+                durationField.setBackground(CARD_ALT);
+            durationField.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(new Color(203, 213, 225)),
+                    new EmptyBorder(0, 10, 0, 10)
+            ));
+            durationField.getDocument().addDocumentListener(new SimpleDocumentListener(this::updateTotal));
+
+            totalLabel.setFont(new Font("Segoe UI", Font.BOLD, 15));
+            totalLabel.setForeground(ACCENT);
+
+            JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+            actions.setOpaque(false);
+            JButton rentButton = new RoundedActionButton("Rent", ACCENT, Color.WHITE, ACCENT_DARK);
+            rentButton.setPreferredSize(new Dimension(120, 42));
+            rentButton.setFont(new Font("Segoe UI", Font.BOLD, 14));
+            rentButton.addActionListener(event -> submitRent());
+            actions.add(rentButton);
+
+            root.add(body, BorderLayout.CENTER);
+            root.add(actions, BorderLayout.SOUTH);
+            setContentPane(root);
+        }
+
+        private JPanel infoRow(String label, String value) {
+            JPanel row = new JPanel(new BorderLayout(0, 4));
+            row.setOpaque(false);
+            row.setBorder(new EmptyBorder(0, 0, 8, 0));
+            JLabel labelView = new JLabel(label);
+            labelView.setForeground(MUTED_TEXT);
+            labelView.setFont(new Font("Segoe UI", Font.BOLD, 12));
+            JLabel valueView = new JLabel(value);
+            valueView.setForeground(TEXT);
+            valueView.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+            row.add(labelView, BorderLayout.NORTH);
+            row.add(valueView, BorderLayout.CENTER);
+            return row;
+        }
+
+        private JPanel infoFieldRow(String label, JTextField field) {
+            JPanel row = new JPanel(new java.awt.GridBagLayout());
+            row.setOpaque(false);
+            row.setBorder(new EmptyBorder(0, 0, 8, 0));
+
+            JLabel labelView = new JLabel(label);
+            labelView.setForeground(MUTED_TEXT);
+            labelView.setFont(new Font("Segoe UI", Font.BOLD, 12));
+
+            java.awt.GridBagConstraints labelConstraints = new java.awt.GridBagConstraints();
+            labelConstraints.gridx = 0;
+            labelConstraints.gridy = 0;
+            labelConstraints.anchor = java.awt.GridBagConstraints.WEST;
+            labelConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+            labelConstraints.weightx = 1.0;
+
+            java.awt.GridBagConstraints fieldConstraints = new java.awt.GridBagConstraints();
+            fieldConstraints.gridx = 0;
+            fieldConstraints.gridy = 1;
+            fieldConstraints.anchor = java.awt.GridBagConstraints.WEST;
+            fieldConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+            fieldConstraints.weightx = 1.0;
+            fieldConstraints.insets = new java.awt.Insets(4, 0, 0, 0);
+
+            row.add(labelView, labelConstraints);
+            row.add(field, fieldConstraints);
+            return row;
+        }
+
+        private JPanel infoRow(String label, JLabel valueLabel) {
+            JPanel row = new JPanel(new BorderLayout(0, 4));
+            row.setOpaque(false);
+            row.setBorder(new EmptyBorder(0, 0, 8, 0));
+            JLabel labelView = new JLabel(label);
+            labelView.setForeground(MUTED_TEXT);
+            labelView.setFont(new Font("Segoe UI", Font.BOLD, 12));
+            row.add(labelView, BorderLayout.NORTH);
+            row.add(valueLabel, BorderLayout.CENTER);
+            return row;
+        }
+
+        private void updateTotal() {
+            int days = parseDays();
+            totalLabel.setText(days > 0 ? currencyFormat.format(days * selectedVehicle.getDailyRate()) : currencyFormat.format(0));
+        }
+
+        private int parseDays() {
+            try {
+                return Integer.parseInt(durationField.getText().trim());
+            } catch (NumberFormatException ex) {
+                return -1;
+            }
+        }
+
+        private String getCustomerDisplayName() {
+            try {
+                return invokeString(customer, "getFullName");
+            } catch (ReflectiveOperationException ex) {
+                return "Customer";
+            }
+        }
+
+        private void submitRent() {
+            int days = parseDays();
+            if (days <= 0) {
+                JOptionPane.showMessageDialog(this, "Please enter a valid rental duration.", "Input Required", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
+            try {
+                Object customerSnapshot = createCustomerSnapshot();
+                Object rentalVehicle = createRentalVehicle();
+                double totalCost = days * selectedVehicle.getDailyRate();
+                Object rental = createRentalRecord(customerSnapshot, rentalVehicle, days, totalCost);
+
+                if (!catalog.rentVehicle(selectedVehicle.getVehicleId())) {
+                    JOptionPane.showMessageDialog(this, "This vehicle is no longer available.", "Rental Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                Class<?> rentalDataClass = Class.forName("data.RentalData");
+                Class<?> rentalClass = Class.forName("model.Rental");
+                rentalDataClass.getMethod("addRental", rentalClass).invoke(null, rental);
+
+                if (onCompleted != null) {
+                    onCompleted.run();
+                }
+                dispose();
+                JOptionPane.showMessageDialog(getOwner(), selectedVehicle.getDisplayName() + " is rented.", "Vehicle Rented", JOptionPane.INFORMATION_MESSAGE);
+            } catch (ReflectiveOperationException ex) {
+                JOptionPane.showMessageDialog(this, "Unable to create the rental.", "Rental Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+
+        private Object createCustomerSnapshot() throws ReflectiveOperationException {
+            Class<?> customerClass = Class.forName("model.Customer");
+            return customerClass.getConstructor(String.class, String.class, String.class, String.class, String.class)
+                    .newInstance(invokeString(customer, "getId"), invokeString(customer, "getFullName"), invokeString(customer, "getEmail"), invokeString(customer, "getPassword"), invokeString(customer, "getPhone"));
+        }
+
+        private Object createRentalVehicle() throws ReflectiveOperationException {
+            Class<?> carClass = Class.forName("model.Car");
+            return carClass.getConstructor(String.class, String.class, String.class, double.class, boolean.class, int.class)
+                    .newInstance(selectedVehicle.getVehicleId(), selectedVehicle.getBrand(), selectedVehicle.getName(), selectedVehicle.getDailyRate(), false, 4);
+        }
+
+        private Object createRentalRecord(Object customerSnapshot, Object rentalVehicle, int days, double totalCost) throws ReflectiveOperationException {
+            Class<?> rentalClass = Class.forName("model.Rental");
+            Class<?> customerClass = Class.forName("model.Customer");
+            Class<?> vehicleClass = Class.forName("model.Vehicle");
+            return rentalClass.getConstructor(String.class, customerClass, vehicleClass, int.class, double.class, String.class, String.class)
+                    .newInstance(
+                            "R" + System.currentTimeMillis(),
+                            customerSnapshot,
+                            rentalVehicle,
+                            days,
+                            totalCost,
+                            java.time.LocalDate.now().toString(),
+                            java.time.LocalDate.now().plusDays(days).toString()
+                    );
+        }
+    }
+
+    private static class SimpleDocumentListener implements javax.swing.event.DocumentListener {
+        private final Runnable callback;
+
+        private SimpleDocumentListener(Runnable callback) {
+            this.callback = callback;
+        }
+
+        @Override
+        public void insertUpdate(javax.swing.event.DocumentEvent e) {
+            callback.run();
+        }
+
+        @Override
+        public void removeUpdate(javax.swing.event.DocumentEvent e) {
+            callback.run();
+        }
+
+        @Override
+        public void changedUpdate(javax.swing.event.DocumentEvent e) {
+            callback.run();
         }
     }
 
@@ -680,7 +917,7 @@ public class VehicleRentalModuleApp extends JFrame {
         protected void paintComponent(Graphics graphics) {
             Graphics2D graphics2D = (Graphics2D) graphics.create();
             graphics2D.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            graphics2D.setColor(Color.WHITE);
+            graphics2D.setColor(getBackground());
             graphics2D.fillRoundRect(0, 0, getWidth(), getHeight(), 18, 18);
             graphics2D.setColor(new Color(203, 213, 225));
             graphics2D.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 18, 18);
