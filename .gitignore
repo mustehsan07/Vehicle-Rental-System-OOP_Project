@@ -3,3 +3,5 @@
 /out
 
 *.class
+.env
+#.env.example should NOT be ignored; it's safe to commit

@@ -790,6 +790,12 @@ public class VehicleRentalModuleApp extends JFrame {
                 }
 
                 RentalRequestData.addRequest(request);
+                // notify admins asynchronously about the new request
+                try {
+                    utils.EmailService.sendNewRequestNotification(request);
+                } catch (Throwable t) {
+                    t.printStackTrace();
+                }
 
                 if (onCompleted != null) {
                     onCompleted.run();

@@ -27,23 +27,25 @@ public final class SampleDataLoader {
         RentalHistoryData.clear();
         RentalRequestData.clear();
 
-        admin = new Admin("admin@gmail.com", "admin123");
+        admin = new Admin("mustehsansajjad2007@gmail.com", "admin123");
 
-        CustomerData.addCustomer(new Customer("C001", "Mustehsan", "mustehsan@gmail.com", "customer123", "03001234567"));
-        CustomerData.addCustomer(new Customer("C002", "Ibraheem", "ibraheem@gmail.com", "customer123", "03009876543"));
+        CustomerData.addCustomer(new Customer("C001", "Hashir", "zainhashir209@gmail.com", "c123", "03001234567"));
+        CustomerData.addCustomer(new Customer("C002", "Zain", "zani8297677@gmail.com", "c123", "03009876543"));
+        CustomerData.addCustomer(new Customer("C003", "Abdullah", "azherabdullah24@gmail.com", "c123", "03009876543"));
+        CustomerData.addCustomer(new Customer("C004", "Sumeed", "sumeedahmad71@gmail.com", "c123", "03009876543"));
 
         VehicleData.addVehicle(new Car("V001", "Toyota", "Corolla", 5500, true, 4));
         VehicleData.addVehicle(new Car("V002", "Honda", "Civic", 7500, true, 4));
         VehicleData.addVehicle(new Bike("V003", "Suzuki", "GS 150", 2200, true, 150));
         VehicleData.addVehicle(new Truck("V004", "Hyundai", "Porter", 9800, true, 2.5));
 
-        Customer activeCustomer = CustomerData.findByEmail("mustehsan@gmail.com");
+        Customer activeCustomer = CustomerData.findByEmail("zainhashir209@gmail.com");
         Vehicle activeVehicle = VehicleData.getVehicleById("V001");
         if (activeCustomer != null && activeVehicle != null) {
             RentalData.addActiveRental(new Rental("R001", activeCustomer, activeVehicle, 3, activeVehicle.calculateRent(3), "2026-05-17", "2026-05-20"));
         }
 
-        Customer historyCustomer = CustomerData.findByEmail("ibraheem@gmail.com");
+        Customer historyCustomer = CustomerData.findByEmail("zainhashir209@gmail.com");
         Vehicle historyVehicle = VehicleData.getVehicleById("V002");
         if (historyCustomer != null && historyVehicle != null) {
             RentalHistoryData.addHistoryRecord(new RentalHistory(

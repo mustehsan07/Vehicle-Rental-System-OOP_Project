@@ -189,6 +189,12 @@ public class RentalRequestsDialog extends JDialog {
         }
         RentalData.addRental(rental);
         RentalRequestData.markApproved(request.getRequestId());
+        // notify customer about approval
+        try {
+            utils.EmailService.sendRequestStatusToCustomer(request, "approved");
+        } catch (Throwable t) {
+            t.printStackTrace();
+        }
         refreshTable();
         JOptionPane.showMessageDialog(this, "Request approved.");
     }
@@ -208,6 +214,12 @@ public class RentalRequestsDialog extends JDialog {
             VehicleData.updateVehicle(new Car(request.getVehicleId(), request.getVehicleBrand(), request.getVehicleModel(), request.getDailyRate(), true, 4));
         }
         RentalRequestData.markRejected(request.getRequestId());
+        // notify customer about rejection
+        try {
+            utils.EmailService.sendRequestStatusToCustomer(request, "rejected");
+        } catch (Throwable t) {
+            t.printStackTrace();
+        }
         refreshTable();
         JOptionPane.showMessageDialog(this, "Request rejected.");
     }
