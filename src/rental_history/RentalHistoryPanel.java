@@ -1,6 +1,5 @@
 package rental_history;
 
-import admin.AdminTheme;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -10,11 +9,11 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
-import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
-import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import model.RentalHistory;
+import utils.AppTheme;
+import utils.TableStyles;
 
 /**
  * Reusable rental history panel. Receives history data from caller and renders
@@ -39,38 +38,37 @@ public class RentalHistoryPanel extends JPanel {
             public java.awt.Component prepareRenderer(javax.swing.table.TableCellRenderer renderer, int row, int column) {
                 java.awt.Component component = super.prepareRenderer(renderer, row, column);
                 if (!isRowSelected(row)) {
-                    component.setBackground(row % 2 == 0 ? AdminTheme.CARD : AdminTheme.CARD_ALT);
+                    component.setBackground(row % 2 == 0 ? AppTheme.CARD : AppTheme.CARD_ALT);
                 }
                 return component;
             }
         };
 
-        table.setRowHeight(30);
+        table.setRowHeight(40);
         table.setShowGrid(false);
         table.setIntercellSpacing(new Dimension(0, 0));
         table.setFillsViewportHeight(true);
+        table.setBackground(AppTheme.CARD);
+        table.setOpaque(true);
         table.setRowMargin(0);
-        table.setFont(AdminTheme.BODY_FONT);
-
-        table.getTableHeader().setBackground(AdminTheme.TABLE_HEADER_BACKGROUND);
-        table.getTableHeader().setForeground(AdminTheme.TABLE_HEADER_FOREGROUND);
-        table.getTableHeader().setFont(AdminTheme.TABLE_HEADER_FONT);
+        table.setFont(AppTheme.BODY_FONT);
+        table.getTableHeader().setDefaultRenderer(new TableStyles.HeaderRenderer());
+        table.getTableHeader().setPreferredSize(new Dimension(table.getTableHeader().getPreferredSize().width, 40));
         table.getTableHeader().setOpaque(true);
-        table.getTableHeader().setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, AdminTheme.BORDER));
-        table.setSelectionBackground(AdminTheme.ACCENT);
+        table.setSelectionBackground(AppTheme.ACCENT);
         table.setSelectionForeground(Color.WHITE);
 
-        DefaultTableCellRenderer centered = new DefaultTableCellRenderer();
-        centered.setHorizontalAlignment(SwingConstants.CENTER);
-        table.getColumnModel().getColumn(0).setCellRenderer(centered);
-        table.getColumnModel().getColumn(2).setCellRenderer(centered);
-        table.getColumnModel().getColumn(3).setCellRenderer(centered);
-        table.getColumnModel().getColumn(4).setCellRenderer(centered);
-        table.getColumnModel().getColumn(5).setCellRenderer(centered);
+        // Use shared row/body renderers to match Available Fleet table styling
+        table.getColumnModel().getColumn(0).setCellRenderer(new TableStyles.CenteredRenderer());
+        table.getColumnModel().getColumn(1).setCellRenderer(new TableStyles.RowBodyRenderer());
+        table.getColumnModel().getColumn(2).setCellRenderer(new TableStyles.CenteredRenderer());
+        table.getColumnModel().getColumn(3).setCellRenderer(new TableStyles.CenteredRenderer());
+        table.getColumnModel().getColumn(4).setCellRenderer(new TableStyles.CenteredRenderer());
+        table.getColumnModel().getColumn(5).setCellRenderer(new TableStyles.RightAlignedRenderer());
 
         JScrollPane scrollPane = new JScrollPane(table);
         scrollPane.setBorder(BorderFactory.createEmptyBorder());
-        scrollPane.getViewport().setBackground(AdminTheme.CARD);
+        scrollPane.getViewport().setBackground(AppTheme.CARD);
         scrollPane.setOpaque(false);
 
         add(scrollPane, BorderLayout.CENTER);

@@ -2,17 +2,12 @@ package auth;
 
 import customer.CustomerDashboard;
 import data.CustomerData;
-import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
-import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -23,24 +18,20 @@ import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import javax.swing.JToggleButton;
 import model.Customer;
+import utils.AppTheme;
 
 public class ProVehicleLogin extends JFrame {
-    private static final Color ACCENT = Color.decode("#0F766E");
-    private static final Color ACCENT_HOVER = Color.decode("#115E59");
-    private static final Color BACKGROUND = Color.decode("#E9EEF3");
-    private static final Color CARD = Color.WHITE;
-    private static final Color INPUT_BACKGROUND = Color.decode("#F1F7F7");
-    private static final Color TEXT_DARK = Color.decode("#0F172A");
-    private static final Color TEXT_MUTED = Color.decode("#64748B");
-    private static final Color BORDER = Color.decode("#DCE3E7");
-    private static final Color CARD_ALT = Color.decode("#F8FAFB");
+    private static final Color ACCENT = AppTheme.ACCENT;
+    private static final Color ACCENT_HOVER = AppTheme.ACCENT_HOVER;
+    private static final Color BACKGROUND = AppTheme.BACKGROUND;
+    private static final Color CARD = AppTheme.CARD;
+    private static final Color INPUT_BACKGROUND = AppTheme.INPUT_BACKGROUND;
+    private static final Color TEXT_DARK = AppTheme.TEXT_PRIMARY;
+    private static final Color TEXT_MUTED = AppTheme.TEXT_SECONDARY;
+    private static final Color BORDER = AppTheme.BORDER;
     private static final int RADIUS_LARGE = 38;
 
-    private final BufferedImage backgroundImage;
-
     public ProVehicleLogin() {
-        backgroundImage = loadBackgroundImage();
-
         setTitle("Vehicle Rental Management System");
         setSize(1200, 760);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -53,16 +44,7 @@ public class ProVehicleLogin extends JFrame {
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
                 Graphics2D g2 = (Graphics2D) g.create();
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                if (backgroundImage != null) {
-                    drawImageCover(g2, backgroundImage, getWidth(), getHeight());
-                } else {
-                    g2.setPaint(new java.awt.GradientPaint(0, 0, BACKGROUND, getWidth(), getHeight(), CARD_ALT));
-                    g2.fillRect(0, 0, getWidth(), getHeight());
-                }
-                g2.setComposite(AlphaComposite.SrcOver.derive(0.62f));
-                g2.setColor(Color.BLACK);
-                g2.fillRect(0, 0, getWidth(), getHeight());
+                AppTheme.paintBackground(g2, getWidth(), getHeight());
                 g2.dispose();
             }
         };
@@ -80,13 +62,13 @@ public class ProVehicleLogin extends JFrame {
 
         JLabel subtitle = new JLabel("Customer and admin access in one clean portal");
         subtitle.setFont(new Font("Segoe UI", Font.PLAIN, 18));
-        subtitle.setForeground(new Color(230, 235, 241));
+        subtitle.setForeground(new Color(203, 213, 225));
         subtitle.setBounds(2, 150, 480, 28);
         heroPanel.add(subtitle);
 
         JLabel story = new JLabel("<html><div style='width:360px;'>Manage vehicles, customer accounts, and rental flow from a focused dashboard designed for speed.</div></html>");
         story.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        story.setForeground(new Color(235, 240, 244));
+        story.setForeground(new Color(148, 163, 184));
         story.setBounds(2, 180, 480, 76);
         heroPanel.add(story);
 
@@ -215,6 +197,7 @@ public class ProVehicleLogin extends JFrame {
         field.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         field.setBackground(INPUT_BACKGROUND);
         field.setForeground(TEXT_DARK);
+        field.setCaretColor(Color.WHITE);
         field.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createMatteBorder(0, 0, 2, 0, ACCENT),
                 BorderFactory.createEmptyBorder(0, 10, 0, 10)
@@ -227,6 +210,7 @@ public class ProVehicleLogin extends JFrame {
         field.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         field.setBackground(INPUT_BACKGROUND);
         field.setForeground(TEXT_DARK);
+        field.setCaretColor(Color.WHITE);
         field.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createMatteBorder(0, 0, 2, 0, ACCENT),
                 BorderFactory.createEmptyBorder(0, 10, 0, 10)
@@ -240,7 +224,7 @@ public class ProVehicleLogin extends JFrame {
         toggleButton.setText("Show");
         toggleButton.setFont(new Font("Segoe UI", Font.BOLD, 12));
         toggleButton.setForeground(ACCENT);
-        toggleButton.setBackground(Color.WHITE);
+        toggleButton.setBackground(new Color(0, 0, 0, 0));
         toggleButton.setOpaque(false);
         toggleButton.setBorder(BorderFactory.createEmptyBorder());
         toggleButton.setFocusPainted(false);
@@ -310,50 +294,6 @@ public class ProVehicleLogin extends JFrame {
         button.setMargin(new java.awt.Insets(0, 0, 0, 0));
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
         return button;
-    }
-
-    private BufferedImage loadBackgroundImage() {
-        File[] candidates = new File[] {
-                new File(System.getProperty("user.dir"), "../assets/images/background.png"),
-                new File(System.getProperty("user.dir"), "src/assets/images/background.png"),
-                new File(System.getProperty("user.dir"), "../src/assets/images/background.png"),
-                new File("src/assets/images/background.png"),
-                new File("assets/images/background.png")
-        };
-        for (File imageFile : candidates) {
-            if (imageFile.exists()) {
-                try {
-                    return ImageIO.read(imageFile);
-                } catch (IOException ex) {
-                    return null;
-                }
-            }
-        }
-
-        java.net.URL resource = getClass().getResource("/assets/images/background.png");
-        if (resource != null) {
-            try {
-                return ImageIO.read(resource);
-            } catch (IOException ex) {
-                return null;
-            }
-        }
-        return null;
-    }
-
-    private void drawImageCover(Graphics2D g2, BufferedImage image, int targetWidth, int targetHeight) {
-        int imageWidth = image.getWidth();
-        int imageHeight = image.getHeight();
-        if (imageWidth <= 0 || imageHeight <= 0 || targetWidth <= 0 || targetHeight <= 0) {
-            return;
-        }
-
-        double scale = Math.max((double) targetWidth / imageWidth, (double) targetHeight / imageHeight);
-        int scaledWidth = (int) Math.round(imageWidth * scale);
-        int scaledHeight = (int) Math.round(imageHeight * scale);
-        int x = (targetWidth - scaledWidth) / 2;
-        int y = (targetHeight - scaledHeight) / 2;
-        g2.drawImage(image, x, y, scaledWidth, scaledHeight, null);
     }
 
 }

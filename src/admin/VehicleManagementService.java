@@ -44,11 +44,20 @@ public class VehicleManagementService {
         if (updated == null || updated.id == null) {
             return false;
         }
-        return VehicleData.updateVehicle(createVehicle(updated));
+        Vehicle modelVehicle = createVehicle(updated);
+        if (VehicleData.updateVehicle(modelVehicle)) {
+            return true;
+        }
+
+        vehicle_display.Vehicle displayVehicle = createDisplayVehicle(updated);
+        return new VehicleCatalog().updateVehicle(displayVehicle);
     }
 
     public boolean remove(String id) {
-        return VehicleData.removeVehicle(id);
+        if (VehicleData.removeVehicle(id)) {
+            return true;
+        }
+        return new VehicleCatalog().removeVehicle(id);
     }
 
     public VehicleRecord findById(String id) {
@@ -97,6 +106,19 @@ public class VehicleManagementService {
             case "truck" -> new Truck(record.id, brand, model, rate, available, 2.5);
             default -> new Car(record.id, brand, model, rate, available, 4);
         };
+    }
+
+    private vehicle_display.Vehicle createDisplayVehicle(VehicleRecord record) {
+        return new vehicle_display.Vehicle(
+                record.id,
+                record.model,
+                record.brand,
+                record.type,
+                "Bike".equalsIgnoreCase(record.type) ? 2 : ("Truck".equalsIgnoreCase(record.type) ? 2 : 5),
+                "Automatic",
+                record.dailyRate,
+                record.available
+        );
     }
 
     public static class VehicleRecord {

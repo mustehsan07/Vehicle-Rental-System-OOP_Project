@@ -1,4 +1,5 @@
 package admin;
+import utils.AppTheme;
 
 import java.awt.FontMetrics;
 import java.awt.Graphics;
@@ -46,8 +47,8 @@ public class ModernTabbedPaneUI extends BasicTabbedPaneUI {
                                       int x, int y, int w, int h, boolean isSelected) {
         Graphics2D g2 = (Graphics2D) g.create();
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        g2.setColor(isSelected ? AdminTheme.ACCENT_SOFT : AdminTheme.CARD_ALT);
-        g2.fillRoundRect(x + 2, y + 2, w - 4, h - 4, AdminTheme.RADIUS_SMALL, AdminTheme.RADIUS_SMALL);
+        g2.setColor(isSelected ? AppTheme.ACCENT_SOFT : AppTheme.CARD_ALT);
+        g2.fillRoundRect(x + 2, y + 2, w - 4, h - 4, AppTheme.RADIUS_SMALL, AppTheme.RADIUS_SMALL);
         g2.dispose();
     }
 
@@ -56,8 +57,8 @@ public class ModernTabbedPaneUI extends BasicTabbedPaneUI {
                                   int x, int y, int w, int h, boolean isSelected) {
         Graphics2D g2 = (Graphics2D) g.create();
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        g2.setColor(isSelected ? AdminTheme.ACCENT : AdminTheme.BORDER);
-        g2.drawRoundRect(x + 2, y + 2, w - 5, h - 5, AdminTheme.RADIUS_SMALL, AdminTheme.RADIUS_SMALL);
+        g2.setColor(isSelected ? AppTheme.ACCENT : AppTheme.BORDER);
+        g2.drawRoundRect(x + 2, y + 2, w - 5, h - 5, AppTheme.RADIUS_SMALL, AppTheme.RADIUS_SMALL);
         g2.dispose();
     }
 
@@ -75,7 +76,7 @@ public class ModernTabbedPaneUI extends BasicTabbedPaneUI {
     @Override
     protected void paintText(Graphics g, int tabPlacement, java.awt.Font font, java.awt.FontMetrics metrics,
                              int tabIndex, String title, java.awt.Rectangle textRect, boolean isSelected) {
-        g.setColor(isSelected ? AdminTheme.ACCENT : AdminTheme.TEXT_PRIMARY);
+        g.setColor(isSelected ? AppTheme.ACCENT : AppTheme.TEXT_PRIMARY);
         super.paintText(g, tabPlacement, font, metrics, tabIndex, title, textRect, isSelected);
     }
 }

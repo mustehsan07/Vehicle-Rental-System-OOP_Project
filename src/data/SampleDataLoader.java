@@ -25,6 +25,7 @@ public final class SampleDataLoader {
         VehicleData.clear();
         RentalData.clear();
         RentalHistoryData.clear();
+        RentalRequestData.clear();
 
         admin = new Admin("admin@gmail.com", "admin123");
 

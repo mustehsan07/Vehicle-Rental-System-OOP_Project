@@ -60,6 +60,29 @@ public class VehicleCatalog {
         return true;
     }
 
+    public boolean updateVehicle(Vehicle updatedVehicle) {
+        if (updatedVehicle == null || updatedVehicle.getVehicleId() == null) {
+            return false;
+        }
+
+        for (int index = 0; index < VEHICLES.size(); index++) {
+            Vehicle current = VEHICLES.get(index);
+            if (current.getVehicleId().equalsIgnoreCase(updatedVehicle.getVehicleId())) {
+                VEHICLES.set(index, updatedVehicle);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean removeVehicle(String vehicleId) {
+        Vehicle vehicle = findVehicleById(vehicleId);
+        if (vehicle == null) {
+            return false;
+        }
+        return VEHICLES.remove(vehicle);
+    }
+
     public List<Vehicle> searchAvailableVehicles(String keyword, String type) {
         String query = keyword == null ? "" : keyword.trim().toLowerCase(Locale.ROOT);
         String selectedType = type == null ? "All" : type;

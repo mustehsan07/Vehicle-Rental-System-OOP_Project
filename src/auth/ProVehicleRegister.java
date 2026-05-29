@@ -23,12 +23,17 @@ import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import javax.swing.JToggleButton;
 import model.Customer;
+import utils.AppTheme;
 
 public class ProVehicleRegister extends JFrame {
-    private static final Color ACCENT = new Color(0x0F766E);
-    private static final Color BACKGROUND = new Color(0xE9EEF3);
-    private static final Color TEXT_DARK = new Color(0x0F172A);
-    private static final Color TEXT_MUTED = new Color(0x64748B);
+    private static final Color ACCENT = AppTheme.ACCENT;
+    private static final Color ACCENT_HOVER = AppTheme.ACCENT_HOVER;
+    private static final Color BACKGROUND = AppTheme.BACKGROUND;
+    private static final Color CARD = AppTheme.CARD;
+    private static final Color CARD_ALT = AppTheme.CARD_ALT;
+    private static final Color TEXT_DARK = AppTheme.TEXT_PRIMARY;
+    private static final Color TEXT_MUTED = AppTheme.TEXT_SECONDARY;
+    private static final Color BORDER = AppTheme.BORDER;
 
     private final BufferedImage backgroundImage;
 
@@ -51,7 +56,7 @@ public class ProVehicleRegister extends JFrame {
                 if (backgroundImage != null) {
                     drawImageCover(g2, backgroundImage, getWidth(), getHeight());
                 } else {
-                    g2.setPaint(new java.awt.GradientPaint(0, 0, new Color(8, 31, 61), getWidth(), getHeight(), new Color(15, 118, 110)));
+                    g2.setPaint(new java.awt.GradientPaint(0, 0, BACKGROUND, getWidth(), getHeight(), CARD_ALT));
                     g2.fillRect(0, 0, getWidth(), getHeight());
                 }
                 g2.setComposite(AlphaComposite.SrcOver.derive(0.62f));
@@ -73,13 +78,13 @@ public class ProVehicleRegister extends JFrame {
 
         JLabel subtitle = new JLabel("Customer account creation in one clean portal");
         subtitle.setFont(new Font("Segoe UI", Font.PLAIN, 18));
-        subtitle.setForeground(new Color(230, 235, 241));
+        subtitle.setForeground(new Color(203, 213, 225));
         subtitle.setBounds(2, 150, 480, 28);
         heroPanel.add(subtitle);
 
         JLabel story = new JLabel("<html><div style='width:360px;'>Register once and keep your bookings, rentals, and history in one secure profile.</div></html>");
         story.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        story.setForeground(new Color(235, 240, 244));
+        story.setForeground(new Color(148, 163, 184));
         story.setBounds(2, 180, 480, 76);
         heroPanel.add(story);
         mainPanel.add(heroPanel);
@@ -183,8 +188,10 @@ public class ProVehicleRegister extends JFrame {
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(Color.WHITE);
+                g2.setColor(CARD);
                 g2.fillRoundRect(0, 0, getWidth(), getHeight(), 30, 30);
+                g2.setColor(BORDER);
+                g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 30, 30);
                 g2.dispose();
             }
         };
@@ -196,7 +203,7 @@ public class ProVehicleRegister extends JFrame {
     private JLabel createLabel(String text) {
         JLabel label = new JLabel(text);
         label.setFont(new Font("Segoe UI", Font.BOLD, 11));
-        label.setForeground(Color.BLACK);
+        label.setForeground(TEXT_DARK);
         return label;
     }
 
@@ -205,6 +212,7 @@ public class ProVehicleRegister extends JFrame {
         field.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         field.setBackground(BACKGROUND);
         field.setForeground(TEXT_DARK);
+        field.setCaretColor(Color.WHITE);
         field.setBorder(BorderFactory.createMatteBorder(0, 0, 2, 0, ACCENT));
         return field;
     }
@@ -214,6 +222,7 @@ public class ProVehicleRegister extends JFrame {
         field.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         field.setBackground(BACKGROUND);
         field.setForeground(TEXT_DARK);
+        field.setCaretColor(Color.WHITE);
         field.setBorder(BorderFactory.createMatteBorder(0, 0, 2, 0, ACCENT));
         field.setEchoChar('\u2022');
         return field;
@@ -235,7 +244,7 @@ public class ProVehicleRegister extends JFrame {
             protected void paintBorder(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(new Color(15, 118, 110));
+                g2.setColor(ACCENT_HOVER);
                 g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 14, 14);
                 g2.dispose();
             }
@@ -255,7 +264,7 @@ public class ProVehicleRegister extends JFrame {
         toggleButton.setText("Show");
         toggleButton.setFont(new Font("Segoe UI", Font.BOLD, 12));
         toggleButton.setForeground(ACCENT);
-        toggleButton.setBackground(Color.WHITE);
+        toggleButton.setBackground(new Color(0, 0, 0, 0));
         toggleButton.setOpaque(false);
         toggleButton.setBorder(BorderFactory.createEmptyBorder());
         toggleButton.setFocusPainted(false);

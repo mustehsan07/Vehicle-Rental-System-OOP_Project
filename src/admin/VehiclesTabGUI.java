@@ -1,5 +1,4 @@
 package admin;
-
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.FlowLayout;
@@ -17,6 +16,8 @@ import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
+import utils.AppTheme;
+import utils.TableStyles;
 
 public class VehiclesTabGUI extends RoundedPanel {
     private final VehicleManagementService service;
@@ -24,14 +25,14 @@ public class VehiclesTabGUI extends RoundedPanel {
     private JTable table;
 
     private final JTextField idField = createField();
-    private final JComboBox<String> typeBox = new RoundedComboBox<>(new String[]{"Car", "Bike", "Truck"}, AdminTheme.RADIUS_SMALL);
+    private final JComboBox<String> typeBox = new RoundedComboBox<>(new String[]{"Car", "Bike", "Truck", "SUV", "Van", "Luxury"}, AppTheme.RADIUS_SMALL);
     private final JTextField brandField = createField();
     private final JTextField modelField = createField();
     private final JTextField rateField = createField();
-    private final JComboBox<String> statusBox = new RoundedComboBox<>(new String[]{"Available", "Rented"}, AdminTheme.RADIUS_SMALL);
+    private final JComboBox<String> statusBox = new RoundedComboBox<>(new String[]{"Available", "Rented"}, AppTheme.RADIUS_SMALL);
 
     public VehiclesTabGUI(VehicleManagementService service) {
-        super(AdminTheme.BACKGROUND, AdminTheme.RADIUS_LARGE, AdminTheme.BORDER, 1);
+        super(AppTheme.BACKGROUND, AppTheme.RADIUS_LARGE, AppTheme.BORDER, 1);
         this.service = service;
         setLayout(new BorderLayout(16, 16));
         setBorder(BorderFactory.createEmptyBorder(16, 16, 16, 16));
@@ -49,13 +50,13 @@ public class VehiclesTabGUI extends RoundedPanel {
     }
 
     private JPanel createTableCard() {
-        RoundedPanel card = new RoundedPanel(AdminTheme.CARD, AdminTheme.RADIUS_LARGE, AdminTheme.BORDER, 1);
+        RoundedPanel card = new RoundedPanel(AppTheme.CARD, AppTheme.RADIUS_LARGE, AppTheme.BORDER, 1);
         card.setLayout(new BorderLayout(0, 12));
         card.setBorder(BorderFactory.createEmptyBorder(18, 18, 18, 18));
 
         JLabel heading = new JLabel("Vehicle Inventory");
-        heading.setFont(AdminTheme.SUBTITLE_FONT);
-        heading.setForeground(AdminTheme.TEXT_PRIMARY);
+        heading.setFont(AppTheme.SUBTITLE_FONT);
+        heading.setForeground(AppTheme.TEXT_PRIMARY);
         card.add(heading, BorderLayout.NORTH);
 
         table = new JTable(tableModel) {
@@ -63,23 +64,30 @@ public class VehiclesTabGUI extends RoundedPanel {
             public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
                 Component component = super.prepareRenderer(renderer, row, column);
                 if (!isRowSelected(row)) {
-                    component.setBackground(row % 2 == 0 ? AdminTheme.CARD : AdminTheme.CARD_ALT);
+                    component.setBackground(row % 2 == 0 ? AppTheme.CARD : AppTheme.CARD_ALT);
                 }
                 return component;
             }
         };
-        table.setRowHeight(28);
+        table.setBackground(AppTheme.CARD);
+        table.setOpaque(true);
+        table.setRowHeight(40);
         table.setShowGrid(false);
         table.setIntercellSpacing(new java.awt.Dimension(0, 0));
         table.setFillsViewportHeight(true);
         table.setRowMargin(0);
-        table.getTableHeader().setBackground(AdminTheme.TABLE_HEADER_BACKGROUND);
-        table.getTableHeader().setForeground(AdminTheme.TABLE_HEADER_FOREGROUND);
-        table.getTableHeader().setFont(AdminTheme.TABLE_HEADER_FONT);
+        table.setFont(AppTheme.BODY_FONT);
+        table.getTableHeader().setDefaultRenderer(new TableStyles.HeaderRenderer());
+        table.getTableHeader().setPreferredSize(new java.awt.Dimension(table.getTableHeader().getPreferredSize().width, 40));
         table.getTableHeader().setOpaque(true);
-        table.getTableHeader().setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, AdminTheme.BORDER));
-        table.setSelectionBackground(AdminTheme.ACCENT);
+        table.setSelectionBackground(AppTheme.ACCENT);
         table.setSelectionForeground(java.awt.Color.WHITE);
+        table.getColumnModel().getColumn(0).setCellRenderer(new TableStyles.CenteredRenderer());
+        table.getColumnModel().getColumn(1).setCellRenderer(new TableStyles.CenteredRenderer());
+        table.getColumnModel().getColumn(2).setCellRenderer(new TableStyles.RowBodyRenderer());
+        table.getColumnModel().getColumn(3).setCellRenderer(new TableStyles.RowBodyRenderer());
+        table.getColumnModel().getColumn(4).setCellRenderer(new TableStyles.CenteredRenderer());
+        table.getColumnModel().getColumn(5).setCellRenderer(new TableStyles.RightAlignedRenderer());
         table.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -91,7 +99,7 @@ public class VehiclesTabGUI extends RoundedPanel {
 
         JScrollPane scrollPane = new JScrollPane(table);
         scrollPane.setBorder(BorderFactory.createEmptyBorder());
-        scrollPane.getViewport().setBackground(AdminTheme.CARD);
+        scrollPane.getViewport().setBackground(AppTheme.CARD);
         scrollPane.setOpaque(false);
         card.add(scrollPane, BorderLayout.CENTER);
 
@@ -99,12 +107,12 @@ public class VehiclesTabGUI extends RoundedPanel {
     }
 
     private JPanel createFormCard() {
-        RoundedPanel card = new RoundedPanel(AdminTheme.CARD, AdminTheme.RADIUS_LARGE, AdminTheme.BORDER, 1);
+        RoundedPanel card = new RoundedPanel(AppTheme.CARD, AppTheme.RADIUS_LARGE, AppTheme.BORDER, 1);
         card.setLayout(new BorderLayout(8, 8));
         card.setBorder(BorderFactory.createEmptyBorder(14, 14, 14, 14));
 
         JPanel fields = new JPanel(new GridLayout(2, 6, 4, 4));
-        fields.setBackground(AdminTheme.CARD);
+        fields.setBackground(AppTheme.CARD);
         fields.add(label("ID"));
         fields.add(label("Type"));
         fields.add(label("Brand"));
@@ -121,11 +129,11 @@ public class VehiclesTabGUI extends RoundedPanel {
         statusBox.setPreferredSize(new java.awt.Dimension(0, 40));
 
         JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
-        actions.setBackground(AdminTheme.CARD);
+        actions.setBackground(AppTheme.CARD);
 
         JButton addBtn = button("Add");
         JButton updateBtn = button("Update");
-        JButton deleteBtn = button("Delete", AdminTheme.ACCENT_HOVER, AdminTheme.ACCENT_HOVER, java.awt.Color.WHITE, null);
+        JButton deleteBtn = button("Delete", AppTheme.ACCENT_HOVER, AppTheme.ACCENT_HOVER, java.awt.Color.WHITE, null);
         JButton clearBtn = outlineButton("Clear");
 
         addBtn.addActionListener(e -> addVehicle());
@@ -145,22 +153,22 @@ public class VehiclesTabGUI extends RoundedPanel {
 
     private JLabel label(String text) {
         JLabel label = new JLabel(text);
-        label.setForeground(AdminTheme.TEXT_SECONDARY);
-        label.setFont(AdminTheme.BODY_FONT);
+        label.setForeground(AppTheme.TEXT_SECONDARY);
+        label.setFont(AppTheme.BODY_FONT);
         return label;
     }
 
     private JButton button(String text) {
-        return button(text, AdminTheme.ACCENT, AdminTheme.ACCENT_HOVER, java.awt.Color.WHITE, AdminTheme.ACCENT);
+        return button(text, AppTheme.ACCENT, AppTheme.ACCENT_HOVER, java.awt.Color.WHITE, AppTheme.ACCENT);
     }
 
     private JButton outlineButton(String text) {
-        return button(text, AdminTheme.CARD, AdminTheme.ACCENT_SOFT, AdminTheme.TEXT_PRIMARY, AdminTheme.BORDER);
+        return button(text, AppTheme.CARD, AppTheme.ACCENT_SOFT, AppTheme.TEXT_PRIMARY, AppTheme.BORDER);
     }
 
     private JButton button(String text, java.awt.Color base, java.awt.Color hover, java.awt.Color foreground, java.awt.Color border) {
-        RoundedButton b = new RoundedButton(text, base, hover, foreground, border, AdminTheme.RADIUS_SMALL);
-        b.setFont(AdminTheme.BUTTON_FONT);
+        RoundedButton b = new RoundedButton(text, base, hover, foreground, border, AppTheme.RADIUS_SMALL);
+        b.setFont(AppTheme.BUTTON_FONT);
         b.setBorder(BorderFactory.createEmptyBorder(10, 16, 10, 16));
         return b;
     }
@@ -250,12 +258,12 @@ public class VehiclesTabGUI extends RoundedPanel {
 
     private JTextField createField() {
         JTextField field = new JTextField();
-        field.setBackground(AdminTheme.BACKGROUND);
-        field.setForeground(AdminTheme.TEXT_PRIMARY);
-        field.setCaretColor(AdminTheme.ACCENT);
-        field.setFont(AdminTheme.BODY_FONT.deriveFont(java.awt.Font.PLAIN, 13f));
+        field.setBackground(AppTheme.BACKGROUND);
+        field.setForeground(AppTheme.TEXT_PRIMARY);
+        field.setCaretColor(java.awt.Color.WHITE);
+        field.setFont(AppTheme.BODY_FONT.deriveFont(java.awt.Font.PLAIN, 13f));
         field.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createMatteBorder(0, 0, 2, 0, AdminTheme.ACCENT),
+                BorderFactory.createMatteBorder(0, 0, 2, 0, AppTheme.ACCENT),
                 BorderFactory.createEmptyBorder(8, 10, 8, 10)
         ));
         field.setPreferredSize(new java.awt.Dimension(0, 38));

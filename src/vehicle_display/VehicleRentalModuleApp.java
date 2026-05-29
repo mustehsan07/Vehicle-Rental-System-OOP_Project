@@ -1,5 +1,7 @@
 package vehicle_display;
 
+import customer.CustomerDashboard;
+import data.RentalRequestData;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -8,7 +10,6 @@ import java.awt.Dialog;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
-import java.awt.GradientPaint;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.GridBagConstraints;
@@ -19,6 +20,7 @@ import java.awt.Window;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.text.NumberFormat;
+import java.time.LocalDate;
 import java.util.Locale;
 import javax.swing.BorderFactory;
 import javax.swing.DefaultListCellRenderer;
@@ -32,31 +34,35 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
+import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
 import javax.swing.plaf.basic.BasicComboBoxUI;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.JTableHeader;
+import model.Customer;
+import model.RentalRequest;
+import utils.AppTheme;
 
 public class VehicleRentalModuleApp extends JFrame {
-    private static final Color BACKGROUND = new Color(233, 238, 243);
-    private static final Color CARD = Color.WHITE;
-    private static final Color CARD_ALT = new Color(248, 250, 251);
-    private static final Color SURFACE_LIGHT = new Color(30, 41, 59);
-    private static final Color TEXT = new Color(15, 23, 42);
-    private static final Color MUTED_TEXT = new Color(100, 116, 139);
-    private static final Color ACCENT = new Color(15, 118, 110);
-    private static final Color ACCENT_DARK = new Color(17, 94, 89);
-    private static final Color ACCENT_SOFT = new Color(217, 240, 238);
+    private static final Color CARD = AppTheme.CARD;
+    private static final Color CARD_ALT = AppTheme.CARD_ALT;
+    private static final Color SURFACE_LIGHT = AppTheme.TABLE_HEADER_BACKGROUND;
+    private static final Color TEXT = AppTheme.TEXT_PRIMARY;
+    private static final Color MUTED_TEXT = AppTheme.TEXT_SECONDARY;
+    private static final Color ACCENT = AppTheme.ACCENT;
+    private static final Color ACCENT_DARK = AppTheme.ACCENT_HOVER;
+    private static final Color ACCENT_SOFT = AppTheme.ACCENT_SOFT;
+    private static final Color BORDER = AppTheme.BORDER;
     private static final String SEARCH_PLACEHOLDER = "Search by ID, name, or brand";
 
-    private static Object currentCustomer;
+    private static Customer currentCustomer;
 
     private final VehicleCatalog catalog = new VehicleCatalog();
     private final VehicleTableModel tableModel = new VehicleTableModel();
     private final NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(Locale.forLanguageTag("en-PK"));
-    private final Object customer;
+    private final Customer customer;
 
     private JTable vehicleTable;
     private JTextField searchField;
@@ -81,7 +87,7 @@ public class VehicleRentalModuleApp extends JFrame {
         updateSelectionDetails();
     }
 
-    public static void setCurrentCustomer(Object customer) {
+    public static void setCurrentCustomer(Customer customer) {
         currentCustomer = customer;
     }
 
@@ -98,9 +104,7 @@ public class VehicleRentalModuleApp extends JFrame {
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
                 Graphics2D g2 = (Graphics2D) g.create();
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setPaint(new GradientPaint(0, 0, BACKGROUND, getWidth(), getHeight(), CARD_ALT));
-                g2.fillRect(0, 0, getWidth(), getHeight());
+                AppTheme.paintBackground(g2, getWidth(), getHeight());
                 g2.dispose();
             }
         };
@@ -108,7 +112,6 @@ public class VehicleRentalModuleApp extends JFrame {
         root.setOpaque(false);
         root.add(createHeaderPanel(), BorderLayout.NORTH);
         root.add(createContentPanel(), BorderLayout.CENTER);
-        root.add(createFooterPanel(), BorderLayout.SOUTH);
         return root;
     }
 
@@ -211,7 +214,7 @@ public class VehicleRentalModuleApp extends JFrame {
                 }
                 component.setForeground(TEXT);
                 if (component instanceof javax.swing.JComponent jComponent) {
-                    jComponent.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(220, 228, 235)));
+                    jComponent.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, BORDER));
                 }
                 return component;
             }
@@ -297,7 +300,12 @@ public class VehicleRentalModuleApp extends JFrame {
         gbc.insets = new Insets(10, 0, 0, 0);
         card.add(rentButton, gbc);
 
+        statusLabel = createMutedLabel("Select a vehicle to begin.");
         gbc.gridy = 5;
+        gbc.insets = new Insets(12, 0, 0, 0);
+        card.add(statusLabel, gbc);
+
+        gbc.gridy = 6;
         gbc.weighty = 1;
         card.add(new JLabel(), gbc);
         return card;
@@ -362,16 +370,6 @@ public class VehicleRentalModuleApp extends JFrame {
         return label;
     }
 
-    private JPanel createFooterPanel() {
-        JPanel footer = createCardPanel();
-        footer.setLayout(new BorderLayout());
-        statusLabel = new JLabel("Ready to rent a vehicle.");
-        statusLabel.setForeground(MUTED_TEXT);
-        statusLabel.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        footer.add(statusLabel, BorderLayout.WEST);
-        return footer;
-    }
-
     private JPanel createCardPanel() {
         JPanel panel = new JPanel() {
             @Override
@@ -380,7 +378,7 @@ public class VehicleRentalModuleApp extends JFrame {
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                 g2.setColor(CARD);
                 g2.fillRoundRect(0, 0, getWidth(), getHeight(), 34, 34);
-                g2.setColor(new Color(220, 228, 235));
+                g2.setColor(BORDER);
                 g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 34, 34);
                 g2.dispose();
             }
@@ -392,10 +390,13 @@ public class VehicleRentalModuleApp extends JFrame {
 
     private JTextField createPlaceholderField(String placeholder) {
         JTextField field = new RoundedTextField(placeholder);
-        field.setPreferredSize(new Dimension(230, 42));
+        field.setPreferredSize(new Dimension(260, 42));
         field.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        field.setBackground(AppTheme.INPUT_BACKGROUND);
         field.setForeground(TEXT);
-        field.setCaretColor(TEXT);
+        field.setCaretColor(Color.WHITE);
+        field.setSelectionColor(AppTheme.ACCENT_SOFT);
+        field.setSelectedTextColor(Color.WHITE);
         field.addFocusListener(new FocusAdapter() {
             @Override
             public void focusGained(FocusEvent event) {
@@ -465,7 +466,7 @@ public class VehicleRentalModuleApp extends JFrame {
     }
 
     private JButton createSecondaryButton(String text) {
-        JButton button = new RoundedActionButton(text, Color.WHITE, ACCENT, new Color(203, 213, 225));
+        JButton button = new RoundedActionButton(text, CARD_ALT, ACCENT, BORDER);
         button.setPreferredSize(new Dimension(120, 42));
         button.setFont(new Font("Segoe UI", Font.BOLD, 14));
         button.setForeground(ACCENT);
@@ -478,9 +479,10 @@ public class VehicleRentalModuleApp extends JFrame {
     }
 
     private void styleComboBox(JComboBox<String> comboBox) {
-        comboBox.setPreferredSize(new Dimension(150, 42));
+        comboBox.setPreferredSize(new Dimension(180, 42));
         comboBox.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         comboBox.setForeground(TEXT);
+        comboBox.setBackground(AppTheme.INPUT_BACKGROUND);
         comboBox.setOpaque(false);
         comboBox.setBorder(BorderFactory.createEmptyBorder(0, 12, 0, 12));
         comboBox.setFocusable(false);
@@ -488,11 +490,25 @@ public class VehicleRentalModuleApp extends JFrame {
         comboBox.setUI(new BasicComboBoxUI() {
             @Override
             protected JButton createArrowButton() {
-                JButton button = new JButton("v");
+                JButton button = new JButton("v") {
+                    @Override
+                    protected void paintComponent(Graphics graphics) {
+                        Graphics2D graphics2D = (Graphics2D) graphics.create();
+                        graphics2D.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                        graphics2D.setColor(AppTheme.INPUT_BACKGROUND);
+                        graphics2D.fillRoundRect(0, 0, getWidth(), getHeight(), 18, 18);
+                        graphics2D.dispose();
+                        super.paintComponent(graphics);
+                    }
+                };
+                button.setPreferredSize(new Dimension(34, 42));
                 button.setForeground(TEXT);
-                button.setBackground(CARD);
+                button.setBackground(AppTheme.INPUT_BACKGROUND);
+                button.setHorizontalAlignment(SwingConstants.CENTER);
                 button.setBorder(BorderFactory.createEmptyBorder());
                 button.setFocusPainted(false);
+                button.setContentAreaFilled(false);
+                button.setBorderPainted(false);
                 button.setOpaque(false);
                 return button;
             }
@@ -512,7 +528,7 @@ public class VehicleRentalModuleApp extends JFrame {
         searchField.setText(SEARCH_PLACEHOLDER);
         typeComboBox.setSelectedIndex(0);
         applyFilters();
-        statusLabel.setText("Filters cleared.");
+        setStatusMessage("Filters cleared.");
     }
 
     private void updateSelectionDetails() {
@@ -556,12 +572,18 @@ public class VehicleRentalModuleApp extends JFrame {
         selectedRow = row;
         vehicleTable.repaint();
         updateSelectionDetails();
-        statusLabel.setText("Selected " + tableModel.getVehicleAt(row).getDisplayName() + ".");
+        setStatusMessage("Selected " + tableModel.getVehicleAt(row).getDisplayName() + ".");
     }
 
     private void afterRentalCreated() {
-        statusLabel.setText("Vehicle rented successfully.");
+        setStatusMessage("Vehicle rented successfully.");
         applyFilters();
+    }
+
+    private void setStatusMessage(String message) {
+        if (statusLabel != null) {
+            statusLabel.setText(message);
+        }
     }
 
     private void updateRentButtonState(boolean enabled) {
@@ -590,29 +612,19 @@ public class VehicleRentalModuleApp extends JFrame {
     }
 
     private void openCustomerDashboard() {
-        try {
-            Class<?> dashboardClass = Class.forName("customer.CustomerDashboard");
-            dashboardClass.getMethod("setActiveCustomer", Object.class).invoke(null, customer);
-            JFrame dashboardFrame = (JFrame) dashboardClass.getConstructor().newInstance();
-            dashboardFrame.setVisible(true);
-            dispose();
-        } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException | java.lang.reflect.InvocationTargetException | InstantiationException ex) {
-            statusLabel.setText("Unable to open the customer dashboard.");
-        }
-    }
-
-    private static String invokeString(Object target, String methodName) throws ReflectiveOperationException {
-        return String.valueOf(target.getClass().getMethod(methodName).invoke(target));
+        CustomerDashboard.setActiveCustomer(customer);
+        new CustomerDashboard().setVisible(true);
+        dispose();
     }
 
     private class RentPopupDialog extends javax.swing.JDialog {
         private final Vehicle selectedVehicle;
-        private final Object customer;
+        private final Customer customer;
         private final Runnable onCompleted;
         private final JTextField durationField = new RoundedTextField("1");
         private final JLabel totalLabel = new JLabel();
 
-        private RentPopupDialog(Window owner, Vehicle selectedVehicle, Object customer, Runnable onCompleted) {
+        private RentPopupDialog(Window owner, Vehicle selectedVehicle, Customer customer, Runnable onCompleted) {
             super(owner, "Rent Vehicle", Dialog.ModalityType.APPLICATION_MODAL);
             this.selectedVehicle = selectedVehicle;
             this.customer = customer;
@@ -628,11 +640,11 @@ public class VehicleRentalModuleApp extends JFrame {
 
             JPanel root = new JPanel(new BorderLayout(0, 14));
             root.setBorder(new EmptyBorder(18, 18, 18, 18));
-            root.setBackground(Color.WHITE);
+            root.setBackground(CARD);
 
             JLabel heading = new JLabel("Rent This Vehicle");
             heading.setFont(new Font("Segoe UI", Font.BOLD, 22));
-            heading.setForeground(TEXT);
+            heading.setForeground(AppTheme.TEXT_PRIMARY);
             root.add(heading, BorderLayout.NORTH);
 
             JPanel body = new JPanel();
@@ -652,7 +664,7 @@ public class VehicleRentalModuleApp extends JFrame {
             durationField.setFont(new Font("Segoe UI", Font.PLAIN, 14));
                 durationField.setBackground(CARD_ALT);
             durationField.setBorder(BorderFactory.createCompoundBorder(
-                    BorderFactory.createLineBorder(new Color(203, 213, 225)),
+                    BorderFactory.createLineBorder(BORDER),
                     new EmptyBorder(0, 10, 0, 10)
             ));
             durationField.getDocument().addDocumentListener(new SimpleDocumentListener(this::updateTotal));
@@ -743,11 +755,7 @@ public class VehicleRentalModuleApp extends JFrame {
         }
 
         private String getCustomerDisplayName() {
-            try {
-                return invokeString(customer, "getFullName");
-            } catch (ReflectiveOperationException ex) {
-                return "Customer";
-            }
+            return customer == null ? "Customer" : customer.getFullName();
         }
 
         private void submitRent() {
@@ -758,56 +766,39 @@ public class VehicleRentalModuleApp extends JFrame {
             }
 
             try {
-                Object customerSnapshot = createCustomerSnapshot();
-                Object rentalVehicle = createRentalVehicle();
                 double totalCost = days * selectedVehicle.getDailyRate();
-                Object rental = createRentalRecord(customerSnapshot, rentalVehicle, days, totalCost);
+                RentalRequest request = new RentalRequest(
+                        "REQ-" + System.currentTimeMillis(),
+                        customer.getId(),
+                        customer.getFullName(),
+                        customer.getEmail(),
+                        customer.getPhone(),
+                        selectedVehicle.getVehicleId(),
+                        selectedVehicle.getBrand(),
+                        selectedVehicle.getName(),
+                        selectedVehicle.getType(),
+                        selectedVehicle.getDailyRate(),
+                        days,
+                        totalCost,
+                        LocalDate.now().toString(),
+                        "Pending"
+                );
 
                 if (!catalog.rentVehicle(selectedVehicle.getVehicleId())) {
                     JOptionPane.showMessageDialog(this, "This vehicle is no longer available.", "Rental Error", JOptionPane.ERROR_MESSAGE);
                     return;
                 }
 
-                Class<?> rentalDataClass = Class.forName("data.RentalData");
-                Class<?> rentalClass = Class.forName("model.Rental");
-                rentalDataClass.getMethod("addRental", rentalClass).invoke(null, rental);
+                RentalRequestData.addRequest(request);
 
                 if (onCompleted != null) {
                     onCompleted.run();
                 }
                 dispose();
-                JOptionPane.showMessageDialog(getOwner(), selectedVehicle.getDisplayName() + " is rented.", "Vehicle Rented", JOptionPane.INFORMATION_MESSAGE);
-            } catch (ReflectiveOperationException ex) {
-                JOptionPane.showMessageDialog(this, "Unable to create the rental.", "Rental Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(getOwner(), selectedVehicle.getDisplayName() + " sent for admin approval.", "Request Submitted", JOptionPane.INFORMATION_MESSAGE);
+            } catch (RuntimeException ex) {
+                JOptionPane.showMessageDialog(this, "Unable to create the request.", "Request Error", JOptionPane.ERROR_MESSAGE);
             }
-        }
-
-        private Object createCustomerSnapshot() throws ReflectiveOperationException {
-            Class<?> customerClass = Class.forName("model.Customer");
-            return customerClass.getConstructor(String.class, String.class, String.class, String.class, String.class)
-                    .newInstance(invokeString(customer, "getId"), invokeString(customer, "getFullName"), invokeString(customer, "getEmail"), invokeString(customer, "getPassword"), invokeString(customer, "getPhone"));
-        }
-
-        private Object createRentalVehicle() throws ReflectiveOperationException {
-            Class<?> carClass = Class.forName("model.Car");
-            return carClass.getConstructor(String.class, String.class, String.class, double.class, boolean.class, int.class)
-                    .newInstance(selectedVehicle.getVehicleId(), selectedVehicle.getBrand(), selectedVehicle.getName(), selectedVehicle.getDailyRate(), false, 4);
-        }
-
-        private Object createRentalRecord(Object customerSnapshot, Object rentalVehicle, int days, double totalCost) throws ReflectiveOperationException {
-            Class<?> rentalClass = Class.forName("model.Rental");
-            Class<?> customerClass = Class.forName("model.Customer");
-            Class<?> vehicleClass = Class.forName("model.Vehicle");
-            return rentalClass.getConstructor(String.class, customerClass, vehicleClass, int.class, double.class, String.class, String.class)
-                    .newInstance(
-                            "R" + System.currentTimeMillis(),
-                            customerSnapshot,
-                            rentalVehicle,
-                            days,
-                            totalCost,
-                            java.time.LocalDate.now().toString(),
-                            java.time.LocalDate.now().plusDays(days).toString()
-                    );
         }
     }
 
@@ -858,7 +849,7 @@ public class VehicleRentalModuleApp extends JFrame {
             label.setForeground(Color.WHITE);
             label.setFont(new Font("Segoe UI", Font.BOLD, 13));
             label.setBorder(BorderFactory.createCompoundBorder(
-                    BorderFactory.createMatteBorder(0, 0, 1, 1, new Color(51, 65, 85)),
+                        BorderFactory.createMatteBorder(0, 0, 1, 1, BORDER),
                     new EmptyBorder(0, 10, 0, 10)
             ));
 
@@ -895,7 +886,7 @@ public class VehicleRentalModuleApp extends JFrame {
             JLabel label = (JLabel) super.getTableCellRendererComponent(
                     table, value, isSelected, hasFocus, row, column);
 
-            label.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(220, 228, 235)));
+            label.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, BORDER));
             return label;
         }
     }
@@ -910,6 +901,9 @@ public class VehicleRentalModuleApp extends JFrame {
         private RoundedTextField(String text) {
             super(text);
             setOpaque(false);
+            setBackground(AppTheme.INPUT_BACKGROUND);
+            setForeground(TEXT);
+            setCaretColor(Color.WHITE);
             setBorder(new EmptyBorder(0, 12, 0, 12));
         }
 
@@ -919,7 +913,7 @@ public class VehicleRentalModuleApp extends JFrame {
             graphics2D.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             graphics2D.setColor(getBackground());
             graphics2D.fillRoundRect(0, 0, getWidth(), getHeight(), 18, 18);
-            graphics2D.setColor(new Color(203, 213, 225));
+            graphics2D.setColor(BORDER);
             graphics2D.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 18, 18);
             graphics2D.dispose();
             super.paintComponent(graphics);
@@ -960,6 +954,8 @@ public class VehicleRentalModuleApp extends JFrame {
         private RoundedComboBox(E[] items) {
             super(items);
             setOpaque(false);
+            setBackground(AppTheme.INPUT_BACKGROUND);
+            setForeground(TEXT);
             setBorder(new EmptyBorder(0, 12, 0, 12));
         }
 
@@ -967,9 +963,9 @@ public class VehicleRentalModuleApp extends JFrame {
         protected void paintComponent(Graphics graphics) {
             Graphics2D graphics2D = (Graphics2D) graphics.create();
             graphics2D.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            graphics2D.setColor(Color.WHITE);
+            graphics2D.setColor(getBackground());
             graphics2D.fillRoundRect(0, 0, getWidth(), getHeight(), 18, 18);
-            graphics2D.setColor(new Color(203, 213, 225));
+            graphics2D.setColor(BORDER);
             graphics2D.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 18, 18);
             graphics2D.dispose();
             super.paintComponent(graphics);
