@@ -5,7 +5,7 @@
 - Abdullah Azhar
 - Hashir Ali
 - Muhammad Zain 
-- Sumeed Ahmed
+- Sumeed Ahmad
 
 ## Run Instructions
 
